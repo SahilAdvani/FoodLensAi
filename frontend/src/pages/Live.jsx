@@ -6,6 +6,7 @@ import CameraView from '@/components/camera/CameraView';
 import VoiceVisualizer from '@/components/live/VoiceVisualizer';
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
 import { Volume2, X, RefreshCw, Check } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 const STEPS = {
     GREETING: 'greeting',
@@ -134,6 +135,11 @@ export default function Live() {
 
     return (
         <div className="min-h-[calc(100vh-4rem)] flex flex-col p-4 bg-gray-50 dark:bg-gray-950">
+            <SEO
+                title="Live Scan"
+                description="Real-time food ingredient scanning. Point your camera at any food package to get instant health insights."
+                keywords="live scan, food camera, ingredient reader, real-time analysis"
+            />
 
             {/* Camera Area */}
             <div className={`flex-1 relative rounded-3xl overflow-hidden bg-black shadow-2xl transition-all duration-500 

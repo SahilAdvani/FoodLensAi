@@ -6,6 +6,7 @@ import VoiceInput from '@/components/chat/VoiceInput';
 import CameraView from '@/components/camera/CameraView';
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
 import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 export default function Chat() {
   const dispatch = useDispatch();
@@ -99,6 +100,11 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto p-4 relative">
+      <SEO
+        title="AI Chat"
+        description="Chat with FoodLens AI nutritionist. Ask questions about ingredients, allergies, and health benefits."
+        keywords="nutrition chat, food ai assistant, diet advice, ingredient questions"
+      />
 
       {/* Camera Overlay */}
       {showCamera && (
