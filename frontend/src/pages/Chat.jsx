@@ -161,7 +161,10 @@ export default function Chat() {
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+      <div
+        className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar"
+        data-lenis-prevent
+      >
 
         {currentChat.map((msg, idx) => (
           <div

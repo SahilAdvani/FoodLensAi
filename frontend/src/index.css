@@ -8,4 +8,31 @@
     .dark {
         color-scheme: dark;
     }
+
+    /* Green Scroller Ruler (Custom Scrollbar) */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: #22c55e;
+        /* green-500 */
+        border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: #16a34a;
+        /* green-600 */
+    }
+
+    /* Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #22c55e transparent;
+    }
 }
