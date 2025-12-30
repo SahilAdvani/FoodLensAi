@@ -62,6 +62,9 @@ export default function Navbar() {
                         <Link to="/about" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors font-medium">
                             About
                         </Link>
+                        <Link to="/contact" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors font-medium">
+                            Contact
+                        </Link>
                     </div>
 
                     {/* Right Actions */}

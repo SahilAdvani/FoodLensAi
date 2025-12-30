@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/clerk-react";
 
 import Home from "@/pages/Home";
 import About from "@/pages/About";
+import Contact from "@/pages/Contact";
 import Live from "@/pages/Live";
 import Chat from "@/pages/Chat";
 import ChatHistory from "@/pages/ChatHistory";
@@ -36,6 +37,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/live" element={<Live />} />
             <Route path="/chat" element={<Chat />} />
             <Route

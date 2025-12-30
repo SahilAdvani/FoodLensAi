@@ -64,7 +64,7 @@ export default function Footer() {
                     <div>
                         <h3 className="text-white font-semibold text-lg mb-6">{t('footer.resources')}</h3>
                         <ul className="space-y-4">
-                            <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Community</Link></li>
+                            <li><Link to="/contact" className="text-gray-400 hover:text-green-400 transition-colors">Contact Us</Link></li>
                             <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Help Center</Link></li>
                         </ul>
                     </div>
