@@ -115,7 +115,7 @@ export default function Chat() {
           <CameraView onCapture={handleCapture} showCaptureButton={!reviewMode} />
 
           {!reviewMode && (
-            <div className="absolute bottom-24 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2 pointer-events-none">
+            <div className="absolute bottom-10 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2 pointer-events-none">
               Tap circle to scan
             </div>
           )}

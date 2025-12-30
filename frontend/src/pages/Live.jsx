@@ -149,6 +149,7 @@ export default function Live() {
                         onCapture={handleCapture}
                         onReady={handleCameraReady}
                         showCaptureButton={step === STEPS.SCANNING}
+                        prompt={step === STEPS.SCANNING ? t('live.steady') : null}
                     />
                 )}
 
@@ -184,11 +185,6 @@ export default function Live() {
                         </div>
                     )}
 
-                    {step === STEPS.SCANNING && (
-                        <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-full text-white font-medium animate-pulse border border-white/20">
-                            {t('live.steady')}
-                        </div>
-                    )}
 
                     {step === STEPS.ANALYZING && (
                         <div className="flex flex-col items-center gap-4 bg-black/60 p-8 rounded-3xl backdrop-blur-md">
