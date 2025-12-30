@@ -36,7 +36,7 @@ export default function ChatHistory() {
               {chat.messages.slice(0, 2).map((msg, idx) => (
                 <p key={idx} className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
                   <span className="font-medium text-gray-900 dark:text-gray-300">
-                    {msg.role === 'user' ? 'You' : 'Ingredia'}:
+                    {msg.role === 'user' ? 'You' : 'FoodLensAI'}:
                   </span> {msg.content}
                 </p>
               ))}

@@ -5,12 +5,21 @@ import { useSelector } from 'react-redux';
 export default function Layout({ children }) {
     const { mode } = useSelector((state) => state.theme);
 
-    // Apply dark mode class to html element (useEffect could be better but this works for simpler integration)
+    // Apply dark mode class to html element
     React.useEffect(() => {
+        const root = document.documentElement;
+
         if (mode === 'dark') {
-            document.documentElement.classList.add('dark');
+            root.classList.add('dark');
+        } else if (mode === 'light') {
+            root.classList.remove('dark');
         } else {
-            document.documentElement.classList.remove('dark');
+            // System preference
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                root.classList.add('dark');
+            } else {
+                root.classList.remove('dark');
+            }
         }
     }, [mode]);
 

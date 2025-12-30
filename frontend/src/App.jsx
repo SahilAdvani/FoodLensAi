@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { store } from "@/store/store";
 
 import Home from "@/pages/Home";
+import Live from "@/pages/Live";
 import Chat from "@/pages/Chat";
 import ChatHistory from "@/pages/ChatHistory";
 import ProtectedRoute from "@/routes/ProtectedRoute";
@@ -18,6 +19,7 @@ export default function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/live" element={<Live />} />
             <Route path="/chat" element={<Chat />} />
             <Route
               path="/chat/history"
