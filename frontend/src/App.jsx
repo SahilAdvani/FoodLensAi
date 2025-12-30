@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 
 import Home from "@/pages/Home";
+import About from "@/pages/About";
 import Live from "@/pages/Live";
 import Chat from "@/pages/Chat";
 import ChatHistory from "@/pages/ChatHistory";
@@ -34,6 +35,7 @@ export default function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
             <Route path="/live" element={<Live />} />
             <Route path="/chat" element={<Chat />} />
             <Route

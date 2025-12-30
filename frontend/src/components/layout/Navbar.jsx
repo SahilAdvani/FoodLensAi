@@ -59,6 +59,9 @@ export default function Navbar() {
                         <Link to="/chat" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2">
                             <MessageSquare size={18} /> {t('navbar.chat')}
                         </Link>
+                        <Link to="/about" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors font-medium">
+                            About
+                        </Link>
                     </div>
 
                     {/* Right Actions */}
