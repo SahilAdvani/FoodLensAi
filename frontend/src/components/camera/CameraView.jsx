@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Camera } from 'lucide-react';
 
-export default function CameraView({ onCapture }) {
+export default function CameraView({ onCapture, onReady }) {
     const videoRef = useRef(null);
     const [hasPermission, setHasPermission] = useState(false);
     const [error, setError] = useState(null);
@@ -16,6 +16,7 @@ export default function CameraView({ onCapture }) {
                     videoRef.current.srcObject = stream;
                 }
                 setHasPermission(true);
+                if (onReady) onReady();
             } catch (err) {
                 console.error("Camera access denied:", err);
                 setError("Camera access denied. Please allow camera access to use Live Mode.");
