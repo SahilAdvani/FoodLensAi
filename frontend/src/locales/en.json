@@ -1,0 +1,48 @@
+{
+    "navbar": {
+        "brand": "FoodLensAI",
+        "home": "Home",
+        "live": "Live Mode",
+        "chat": "AI Chat",
+        "login": "Login"
+    },
+    "home": {
+        "heroTitle": "See What You Eat",
+        "heroSubtitle": "Instantly analyze ingredients, understand health impacts, and make smarter food choices with AI.",
+        "scanButton": "Start Scanning",
+        "chatButton": "Ask AI Assistant",
+        "features": {
+            "scan": "Instant Scanning",
+            "analysis": "AI Analysis",
+            "health": "Health Scoring"
+        }
+    },
+    "footer": {
+        "brandDescription": "Decoding the world of food ingredients, one scan at a time.",
+        "subscribePlaceholder": "Subscribe to newsletter...",
+        "subscribeButton": "Subscribe",
+        "product": "Product",
+        "company": "Company",
+        "resources": "Resources",
+        "legal": "Legal",
+        "copyright": "© {{year}} FoodLensAI Inc. All rights reserved."
+    },
+    "live": {
+        "waiting": "Waiting for camera instructions...",
+        "steady": "Keep Steady...",
+        "analyzing": "Analyzing...",
+        "greeting": "Hello! I'm FoodLens. Let's analyze your food.",
+        "turnOnCamera": "Please turn on your camera to begin.",
+        "keepSteady": "Great. Now, point your camera at the ingredients.",
+        "resultPrefix": "I found",
+        "replay": "Replay",
+        "retake": "Retake",
+        "confirm": "Confirm"
+    },
+    "chat": {
+        "placeholder": "Type your question...",
+        "startPrompt": "Start asking about ingredients!",
+        "user": "You",
+        "ai": "AI"
+    }
+}

@@ -1,22 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { addMessage } from '@/store/chatSlice';
 import CameraView from '@/components/camera/CameraView';
 import VoiceVisualizer from '@/components/live/VoiceVisualizer';
-import { MOCK_INGREDIENTS, LIVE_MODE_CONSTANTS } from '@/constants/mockData';
-import { Volume2, X, RefreshCw } from 'lucide-react';
+import { MOCK_INGREDIENTS } from '@/constants/mockData';
+import { Volume2, X, RefreshCw, Check } from 'lucide-react';
 
 const STEPS = {
     GREETING: 'greeting',
     CAMERA_PERMISSION: 'camera_permission',
     STEADY_INSTRUCTION: 'steady_instruction',
     SCANNING: 'scanning',
+    REVIEW: 'review',
     ANALYZING: 'analyzing',
     RESULT: 'result'
 };
 
 export default function Live() {
     const dispatch = useDispatch();
+    const { t, i18n } = useTranslation();
     const { currentLanguage } = useSelector((state) => state.language);
 
     // States
@@ -24,8 +27,6 @@ export default function Live() {
     const [result, setResult] = useState(null);
     const [cameraActive, setCameraActive] = useState(false);
     const [voiceState, setVoiceState] = useState('idle'); // 'idle' | 'bot-speaking' | 'user-speaking'
-
-    const texts = LIVE_MODE_CONSTANTS[currentLanguage] || LIVE_MODE_CONSTANTS['en-IN'];
 
     // Speak utility with Chat Sync & Visualizer State
     const speak = (text, onEnd) => {
@@ -54,7 +55,7 @@ export default function Live() {
     useEffect(() => {
         // Small delay to ensure voices are loaded (browser quirk)
         const timer = setTimeout(() => {
-            speak(texts.greeting, () => {
+            speak(t('live.greeting'), () => {
                 setStep(STEPS.CAMERA_PERMISSION);
             });
         }, 1000);
@@ -64,7 +65,7 @@ export default function Live() {
     // Step 2: Camera Permission Instruction
     useEffect(() => {
         if (step === STEPS.CAMERA_PERMISSION) {
-            speak(texts.turnOnCamera, () => {
+            speak(t('live.turnOnCamera'), () => {
                 setCameraActive(true); // Trigger Camera View mount
             });
         }
@@ -78,38 +79,47 @@ export default function Live() {
     // Step 3: Steady Instruction -> Auto Scanning
     useEffect(() => {
         if (step === STEPS.STEADY_INSTRUCTION) {
-            speak(texts.keepSteady, () => {
+            speak(t('live.keepSteady'), () => {
                 setStep(STEPS.SCANNING);
             });
         }
     }, [step]);
 
-    // Step 4: Scanning
+    // Step 4: Scanning (Manual Capture now)
     useEffect(() => {
         if (step === STEPS.SCANNING) {
-            // Simulate "Listening/Waiting" state (User Speaking Visuals)
-            setVoiceState('user-speaking'); // Visualizer shrinks as requested "while user speaking" (simulated here as user is "active")
-
-            const timer = setTimeout(() => {
-                setVoiceState('idle');
-                setStep(STEPS.ANALYZING);
-                handleCapture();
-            }, 3000);
-            return () => clearTimeout(timer);
+            // Just wait for user to click capture using the CameraView button
+            setVoiceState('idle');
         }
     }, [step]);
 
 
     const handleCapture = () => {
+        setStep(STEPS.REVIEW);
+    };
+
+    const handleRetake = () => {
+        setStep(STEPS.SCANNING);
+    };
+
+    const handleClose = () => {
+        // Reset to initial state or steady
+        setStep(STEPS.STEADY_INSTRUCTION);
+        speak(t('live.steady'));
+    };
+
+    const handleConfirm = () => {
+        setStep(STEPS.ANALYZING);
+
         setTimeout(() => {
             const randomIngredient = MOCK_INGREDIENTS[Math.floor(Math.random() * MOCK_INGREDIENTS.length)];
             setResult(randomIngredient);
             setStep(STEPS.RESULT);
 
             const desc = currentLanguage === 'hi-IN' ? randomIngredient.description : randomIngredient.description;
-            const text = `${texts.resultPrefix} ${randomIngredient.name}. ${desc}`;
+            const text = `${t('live.resultPrefix')} ${randomIngredient.name}. ${desc}`;
 
-            speakResult(text); // Speak result
+            speakResult(text);
         }, 2000);
     };
 
@@ -130,30 +140,60 @@ export default function Live() {
                 ${step === STEPS.RESULT ? 'h-1/2' : 'h-full'}`}>
                 {!cameraActive && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
-                        <p className="animate-pulse">Waiting for camera instructions...</p>
+                        <p className="animate-pulse">{t('live.waiting')}</p>
                     </div>
                 )}
 
                 {cameraActive && (
                     <CameraView
                         onCapture={handleCapture}
-                        onReady={handleCameraReady} // You need to add this prop to CameraView!
+                        onReady={handleCameraReady}
+                        showCaptureButton={step === STEPS.SCANNING}
                     />
                 )}
 
                 {/* Overlays based on Step */}
                 <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-20">
 
+                    {step === STEPS.REVIEW && (
+                        <div className="flex gap-8 items-center animate-in zoom-in duration-300 pointer-events-auto z-50">
+                            {/* Left: Retake */}
+                            <button
+                                onClick={handleRetake}
+                                className="w-16 h-16 rounded-full bg-gray-100/90 text-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
+                                aria-label="Retake"
+                            >
+                                <RefreshCw size={28} />
+                            </button>
+                            {/* Center: Close */}
+                            <button
+                                onClick={handleClose}
+                                className="w-14 h-14 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
+                                aria-label="Close"
+                            >
+                                <X size={28} />
+                            </button>
+                            {/* Right: Confirm */}
+                            <button
+                                onClick={handleConfirm}
+                                className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform active:scale-95 ring-4 ring-white/30"
+                                aria-label="Confirm"
+                            >
+                                <Check size={40} />
+                            </button>
+                        </div>
+                    )}
+
                     {step === STEPS.SCANNING && (
                         <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-full text-white font-medium animate-pulse border border-white/20">
-                            Keep Steady...
+                            {t('live.steady')}
                         </div>
                     )}
 
                     {step === STEPS.ANALYZING && (
                         <div className="flex flex-col items-center gap-4 bg-black/60 p-8 rounded-3xl backdrop-blur-md">
                             <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-white font-medium text-xl">{texts.analyzing}</p>
+                            <p className="text-white font-medium text-xl">{t('live.analyzing')}</p>
                         </div>
                     )}
                 </div>

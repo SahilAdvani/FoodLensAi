@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useClerk, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { toggleLanguage } from '@/store/languageSlice';
 import { setTheme } from '@/store/themeSlice';
 import { Sun, Moon, Monitor, Languages, Camera, MessageSquare, ChevronDown } from 'lucide-react';
@@ -9,6 +10,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Navbar() {
     const dispatch = useDispatch();
+    const { t } = useTranslation();
     const { currentLanguage } = useSelector((state) => state.language);
     const { mode } = useSelector((state) => state.theme);
     const clerk = useClerk();
@@ -43,17 +45,17 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2">
                         <span className="text-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
-                            FoodLensAI
+                            {t('navbar.brand')}
                         </span>
                     </Link>
 
                     {/* Navigation Links (Desktop) */}
                     <div className="hidden md:flex items-center space-x-8">
                         <Link to="/live" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2">
-                            <Camera size={18} /> Live
+                            <Camera size={18} /> {t('navbar.live')}
                         </Link>
                         <Link to="/chat" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2">
-                            <MessageSquare size={18} /> Chat
+                            <MessageSquare size={18} /> {t('navbar.chat')}
                         </Link>
                     </div>
 
@@ -122,7 +124,7 @@ export default function Navbar() {
                                     onClick={() => clerk.openSignIn()}
                                     className="px-4 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
                                 >
-                                    Sign In
+                                    {t('navbar.login')}
                                 </button>
                             </SignedOut>
                             <SignedIn>

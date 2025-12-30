@@ -1,7 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
-import { Provider } from "react-redux";
-import { store } from "@/store/store";
 
 import Home from "@/pages/Home";
 import Live from "@/pages/Live";
@@ -12,26 +10,39 @@ import Layout from "@/components/layout/Layout";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_placeholder";
 
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
+
 export default function App() {
+  const { currentLanguage } = useSelector((state) => state.language);
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    // Map Redux state (en-IN, hi-IN) to i18next keys (en, hi)
+    const langKey = currentLanguage === 'hi-IN' ? 'hi' : 'en';
+    if (i18n.language !== langKey) {
+      i18n.changeLanguage(langKey);
+    }
+  }, [currentLanguage, i18n]);
+
   return (
-    <Provider store={store}>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/live" element={<Live />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route
-              path="/chat/history"
-              element={
-                <ProtectedRoute>
-                  <ChatHistory />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </Layout>
-      </ClerkProvider>
-    </Provider>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/live" element={<Live />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route
+            path="/chat/history"
+            element={
+              <ProtectedRoute>
+                <ChatHistory />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Layout>
+    </ClerkProvider>
   );
 }
