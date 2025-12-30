@@ -7,6 +7,7 @@ import { toggleLanguage } from '@/store/languageSlice';
 import { setTheme } from '@/store/themeSlice';
 import { Sun, Moon, Monitor, Languages, Camera, MessageSquare, ChevronDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import logo from '@/assets/logo_minimal.png';
 
 export default function Navbar() {
     const dispatch = useDispatch();
@@ -44,6 +45,7 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2">
+                        <img src={logo} alt="FoodLens AI" className="h-8 w-8 object-contain" />
                         <span className="text-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
                             {t('navbar.brand')}
                         </span>
