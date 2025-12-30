@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '@/components/layout/Footer';
+import { useTranslation } from 'react-i18next';
 import { Camera, MessageSquare, ArrowRight, ShieldCheck, Zap, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Home() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
 
@@ -22,24 +24,21 @@ export default function Home() {
           className="flex-1 text-center md:text-left"
         >
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
-            Understand what you <br />
-            <span className="bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
-              Eat in seconds.
-            </span>
+            {t('home.heroTitle')}
           </h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-            FoodLensAI helps you decode food labels instantly. Just point your camera or ask a question to get simple, human-friendly explanations.
+            {t('home.heroSubtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
             <Link to="/live" className="group px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-green-500/30">
               <Camera size={20} />
-              Try Live Mode
+              {t('home.scanButton')}
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link to="/chat" className="px-8 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-full font-semibold text-lg transition-all flex items-center justify-center gap-2">
               <MessageSquare size={20} />
-              Start Chatting
+              {t('home.chatButton')}
             </Link>
           </div>
         </motion.div>
@@ -64,18 +63,18 @@ export default function Home() {
         <div className="grid md:grid-cols-3 gap-8">
           <FeatureCard
             icon={<Zap className="text-yellow-500" size={32} />}
-            title="Instant Scanning"
-            description="Point your camera at any ingredient label to get an immediate analysis of additives and nutrition."
+            title={t('home.features.scan')}
+            description={t('home.features.scan')}
           />
           <FeatureCard
             icon={<ShieldCheck className="text-green-500" size={32} />}
-            title="Safety First"
-            description="Know what's safe. We flag harmful additives with clear color codes: Green, Yellow, and Red."
+            title={t('home.features.health')}
+            description={t('home.features.health')}
           />
           <FeatureCard
             icon={<Globe className="text-blue-500" size={32} />}
-            title="Multi-Language"
-            description="Accessible to everyone. Switch between English and Hindi for both text and voice explanations."
+            title={t('home.features.analysis')}
+            description={t('home.features.analysis')}
           />
         </div>
       </section>

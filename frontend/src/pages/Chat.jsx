@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { addMessage, setLoading } from '@/store/chatSlice';
 import VoiceInput from '@/components/chat/VoiceInput';
 import { Send, User, Bot, Loader2 } from 'lucide-react';
 
 export default function Chat() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { currentChat, isLoading } = useSelector((state) => state.chat);
   const { currentLanguage } = useSelector((state) => state.language);
   const [inputStr, setInputStr] = useState('');
@@ -53,7 +55,7 @@ export default function Chat() {
         {currentChat.length === 0 && (
           <div className="text-center text-gray-400 mt-20">
             <Bot size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg">Start asking about ingredients!</p>
+            <p className="text-lg">{t('chat.startPrompt')}</p>
           </div>
         )}
 
@@ -96,7 +98,7 @@ export default function Chat() {
           value={inputStr}
           onChange={(e) => setInputStr(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder={currentLanguage === 'hi-IN' ? "Yahan likhein..." : "Type your question..."}
+          placeholder={t('chat.placeholder')}
           className="flex-1 bg-transparent border-none outline-none text-gray-800 dark:text-white px-2"
         />
 
