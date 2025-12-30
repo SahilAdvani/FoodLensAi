@@ -3,7 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { addMessage, setLoading } from '@/store/chatSlice';
 import VoiceInput from '@/components/chat/VoiceInput';
-import { Send, User, Bot, Loader2 } from 'lucide-react';
+import CameraView from '@/components/camera/CameraView';
+import { MOCK_INGREDIENTS } from '@/constants/mockData';
+import { Send, User, Bot, Loader2, Camera as CameraIcon, X } from 'lucide-react';
 
 export default function Chat() {
   const dispatch = useDispatch();
@@ -11,6 +13,7 @@ export default function Chat() {
   const { currentChat, isLoading } = useSelector((state) => state.chat);
   const { currentLanguage } = useSelector((state) => state.language);
   const [inputStr, setInputStr] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -19,7 +22,17 @@ export default function Chat() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [currentChat]);
+  }, [currentChat, isLoading]);
+
+  // Initial Greeting
+  useEffect(() => {
+    if (currentChat.length === 0) {
+      const greeting = currentLanguage === 'hi-IN'
+        ? "नमस्ते! क्या आप किसी सामग्री के बारे में जानना चाहते हैं? 'स्कैन' टाइप करें या मुझसे पूछें।"
+        : "Hello! Want to check ingredients? Type 'scan' or ask me.";
+      dispatch(addMessage({ role: 'ai', content: greeting }));
+    }
+  }, [currentLanguage]); // Run when lang changes or mount (if empty)
 
   const handleSendMessage = (text) => {
     if (!text.trim()) return;
@@ -29,16 +42,36 @@ export default function Chat() {
     setInputStr('');
     dispatch(setLoading(true));
 
-    // Simulate AI response
-    setTimeout(() => {
-      let responseText = `I understand you're asking about "${text}". Here is some information...`;
-      if (currentLanguage === 'hi-IN') {
-        responseText = `Main samajh gaya ki aap "${text}" ke baare mein pooch rahe hain. Yahan kuch jaankari hai...`;
-      }
+    // Simulate AI decision to open camera
+    // For demo: Always open camera if text is "scan", or randomly for others? 
+    // User requested "after some msg a camera api call". Let's do it for any message for now to demo.
 
-      dispatch(addMessage({ role: 'ai', content: responseText }));
+    setTimeout(() => {
+      const aiPreText = currentLanguage === 'hi-IN'
+        ? "मैं मदद कर सकता हूँ। कृपया मुझे सामग्री दिखाएं।"
+        : "I can help with that. Please show me the ingredient.";
+
+      dispatch(addMessage({ role: 'ai', content: aiPreText }));
+      setShowCamera(true);
       dispatch(setLoading(false));
-    }, 1200);
+    }, 1000);
+  };
+
+  const handleCapture = () => {
+    setShowCamera(false);
+    dispatch(setLoading(true)); // Analyzing state
+
+    setTimeout(() => {
+      const randomIngredient = MOCK_INGREDIENTS[Math.floor(Math.random() * MOCK_INGREDIENTS.length)];
+      const desc = currentLanguage === 'hi-IN' ? randomIngredient.description : randomIngredient.description;
+
+      const resultText = currentLanguage === 'hi-IN'
+        ? `मुझे मिला: ${randomIngredient.name}. ${desc}`
+        : `I found: ${randomIngredient.name}. ${desc}`;
+
+      dispatch(addMessage({ role: 'ai', content: resultText }));
+      dispatch(setLoading(false));
+    }, 2000);
   };
 
   const handleKeyPress = (e) => {
@@ -49,15 +82,25 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto p-4">
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto p-4 relative">
+
+      {/* Camera Overlay */}
+      {showCamera && (
+        <div className="absolute inset-0 z-50 bg-black rounded-3xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
+          <div className="absolute top-4 right-4 z-50">
+            <button onClick={() => setShowCamera(false)} className="bg-black/50 p-2 rounded-full text-white">
+              <X size={24} />
+            </button>
+          </div>
+          <CameraView onCapture={handleCapture} showCaptureButton={true} />
+          <div className="absolute bottom-24 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2">
+            Tap circle to scan
+          </div>
+        </div>
+      )}
+
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
-        {currentChat.length === 0 && (
-          <div className="text-center text-gray-400 mt-20">
-            <Bot size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg">{t('chat.startPrompt')}</p>
-          </div>
-        )}
 
         {currentChat.map((msg, idx) => (
           <div
@@ -83,6 +126,7 @@ export default function Chat() {
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-tl-none shadow-sm flex items-center">
               <Loader2 size={16} className="animate-spin text-green-600" />
+              <span className="ml-2 text-gray-500 text-xs">{showCamera ? 'Waiting for photo...' : 'Thinking...'}</span>
             </div>
           </div>
         )}
