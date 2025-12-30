@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Camera } from 'lucide-react';
 
-export default function CameraView({ onCapture, onReady, showCaptureButton }) {
+export default function CameraView({ onCapture, onReady, showCaptureButton, prompt }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [hasPermission, setHasPermission] = useState(false);
@@ -14,6 +14,8 @@ export default function CameraView({ onCapture, onReady, showCaptureButton }) {
             setCapturedImage(null);
         }
     }, [showCaptureButton]);
+
+    // ... (keep useEffect for startCamera unchanged)
 
     useEffect(() => {
         const startCamera = async () => {
@@ -79,26 +81,27 @@ export default function CameraView({ onCapture, onReady, showCaptureButton }) {
             {/* Hidden Canvas for Capture */}
             <canvas ref={canvasRef} className="hidden" />
 
-            {/* Display Captured Image or Live Video */}
-            {capturedImage ? (
+            {/* Live Video - Keep mounted but hidden if image captured */}
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`absolute inset-0 w-full h-full object-cover ${capturedImage ? 'hidden' : ''}`}
+            />
+
+            {/* Captured Image Overlay */}
+            {capturedImage && (
                 <img
                     src={capturedImage}
                     alt="Captured"
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
-            ) : (
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover z-10"
                 />
             )}
 
             {/* Overlay UI */}
             {showCaptureButton !== false && (
-                <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-6 z-10 pointer-events-none">
+                <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-6 z-20 pointer-events-none">
                     {/* Capture Button Ring */}
                     <div className="p-1 rounded-full border-4 border-white/30 backdrop-blur-sm pointer-events-auto">
                         <button
@@ -110,11 +113,14 @@ export default function CameraView({ onCapture, onReady, showCaptureButton }) {
                 </div>
             )}
 
-            <div className="absolute top-4 left-0 right-0 text-center pointer-events-none">
-                <span className="bg-black/40 text-white px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-md">
-                    Point at food ingredients
-                </span>
-            </div>
+            {/* Centered Prompt Text */}
+            {prompt && !capturedImage && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <span className="bg-black/40 text-white px-6 py-2 rounded-full text-base font-medium backdrop-blur-md animate-pulse">
+                        {prompt}
+                    </span>
+                </div>
+            )}
         </div>
     );
 }
