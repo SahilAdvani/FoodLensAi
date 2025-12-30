@@ -3,8 +3,17 @@ import { Camera } from 'lucide-react';
 
 export default function CameraView({ onCapture, onReady, showCaptureButton }) {
     const videoRef = useRef(null);
+    const canvasRef = useRef(null);
     const [hasPermission, setHasPermission] = useState(false);
     const [error, setError] = useState(null);
+    const [capturedImage, setCapturedImage] = useState(null);
+
+    useEffect(() => {
+        // If the capture button reappears (scanning mode), clear the frozen image
+        if (showCaptureButton) {
+            setCapturedImage(null);
+        }
+    }, [showCaptureButton]);
 
     useEffect(() => {
         const startCamera = async () => {
@@ -34,8 +43,23 @@ export default function CameraView({ onCapture, onReady, showCaptureButton }) {
     }, []);
 
     const handleCapture = () => {
-        // Determine context (simple image capture for now)
-        // In a real app, we'd draw to a canvas
+        if (videoRef.current && canvasRef.current) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw current frame
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert to data URL
+            const imageDataUrl = canvas.toDataURL('image/png');
+            setCapturedImage(imageDataUrl);
+        }
+
         if (onCapture) {
             onCapture();
         }
@@ -52,13 +76,25 @@ export default function CameraView({ onCapture, onReady, showCaptureButton }) {
 
     return (
         <div className="relative w-full h-[calc(100vh-8rem)] rounded-2xl overflow-hidden bg-black shadow-xl">
-            <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="absolute inset-0 w-full h-full object-cover"
-            />
+            {/* Hidden Canvas for Capture */}
+            <canvas ref={canvasRef} className="hidden" />
+
+            {/* Display Captured Image or Live Video */}
+            {capturedImage ? (
+                <img
+                    src={capturedImage}
+                    alt="Captured"
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+            ) : (
+                <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+            )}
 
             {/* Overlay UI */}
             {showCaptureButton !== false && (

@@ -5,13 +5,14 @@ import { addMessage } from '@/store/chatSlice';
 import CameraView from '@/components/camera/CameraView';
 import VoiceVisualizer from '@/components/live/VoiceVisualizer';
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
-import { Volume2, X, RefreshCw } from 'lucide-react';
+import { Volume2, X, RefreshCw, Check } from 'lucide-react';
 
 const STEPS = {
     GREETING: 'greeting',
     CAMERA_PERMISSION: 'camera_permission',
     STEADY_INSTRUCTION: 'steady_instruction',
     SCANNING: 'scanning',
+    REVIEW: 'review',
     ANALYZING: 'analyzing',
     RESULT: 'result'
 };
@@ -84,23 +85,32 @@ export default function Live() {
         }
     }, [step]);
 
-    // Step 4: Scanning
+    // Step 4: Scanning (Manual Capture now)
     useEffect(() => {
         if (step === STEPS.SCANNING) {
-            // Simulate "Listening/Waiting" state (User Speaking Visuals)
-            setVoiceState('user-speaking'); // Visualizer shrinks as requested "while user speaking" (simulated here as user is "active")
-
-            const timer = setTimeout(() => {
-                setVoiceState('idle');
-                setStep(STEPS.ANALYZING);
-                handleCapture();
-            }, 3000);
-            return () => clearTimeout(timer);
+            // Just wait for user to click capture using the CameraView button
+            setVoiceState('idle');
         }
     }, [step]);
 
 
     const handleCapture = () => {
+        setStep(STEPS.REVIEW);
+    };
+
+    const handleRetake = () => {
+        setStep(STEPS.SCANNING);
+    };
+
+    const handleClose = () => {
+        // Reset to initial state or steady
+        setStep(STEPS.STEADY_INSTRUCTION);
+        speak(t('live.steady'));
+    };
+
+    const handleConfirm = () => {
+        setStep(STEPS.ANALYZING);
+
         setTimeout(() => {
             const randomIngredient = MOCK_INGREDIENTS[Math.floor(Math.random() * MOCK_INGREDIENTS.length)];
             setResult(randomIngredient);
@@ -109,7 +119,7 @@ export default function Live() {
             const desc = currentLanguage === 'hi-IN' ? randomIngredient.description : randomIngredient.description;
             const text = `${t('live.resultPrefix')} ${randomIngredient.name}. ${desc}`;
 
-            speakResult(text); // Speak result
+            speakResult(text);
         }, 2000);
     };
 
@@ -137,12 +147,42 @@ export default function Live() {
                 {cameraActive && (
                     <CameraView
                         onCapture={handleCapture}
-                        onReady={handleCameraReady} // You need to add this prop to CameraView!
+                        onReady={handleCameraReady}
+                        showCaptureButton={step === STEPS.SCANNING}
                     />
                 )}
 
                 {/* Overlays based on Step */}
                 <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-20">
+
+                    {step === STEPS.REVIEW && (
+                        <div className="flex gap-8 items-center animate-in zoom-in duration-300 pointer-events-auto z-50">
+                            {/* Left: Retake */}
+                            <button
+                                onClick={handleRetake}
+                                className="w-16 h-16 rounded-full bg-gray-100/90 text-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
+                                aria-label="Retake"
+                            >
+                                <RefreshCw size={28} />
+                            </button>
+                            {/* Center: Close */}
+                            <button
+                                onClick={handleClose}
+                                className="w-14 h-14 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
+                                aria-label="Close"
+                            >
+                                <X size={28} />
+                            </button>
+                            {/* Right: Confirm */}
+                            <button
+                                onClick={handleConfirm}
+                                className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform active:scale-95 ring-4 ring-white/30"
+                                aria-label="Confirm"
+                            >
+                                <Check size={40} />
+                            </button>
+                        </div>
+                    )}
 
                     {step === STEPS.SCANNING && (
                         <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-full text-white font-medium animate-pulse border border-white/20">

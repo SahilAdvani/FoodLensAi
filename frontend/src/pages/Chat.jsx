@@ -5,7 +5,7 @@ import { addMessage, setLoading } from '@/store/chatSlice';
 import VoiceInput from '@/components/chat/VoiceInput';
 import CameraView from '@/components/camera/CameraView';
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
-import { Send, User, Bot, Loader2, Camera as CameraIcon, X } from 'lucide-react';
+import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check } from 'lucide-react';
 
 export default function Chat() {
   const dispatch = useDispatch();
@@ -14,6 +14,7 @@ export default function Chat() {
   const { currentLanguage } = useSelector((state) => state.language);
   const [inputStr, setInputStr] = useState('');
   const [showCamera, setShowCamera] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -53,12 +54,27 @@ export default function Chat() {
 
       dispatch(addMessage({ role: 'ai', content: aiPreText }));
       setShowCamera(true);
+      setReviewMode(false);
       dispatch(setLoading(false));
     }, 1000);
   };
 
   const handleCapture = () => {
+    setReviewMode(true);
+  };
+
+  const handleRetake = () => {
+    setReviewMode(false);
+  };
+
+  const handleClose = () => {
     setShowCamera(false);
+    setReviewMode(false);
+  };
+
+  const handleConfirm = () => {
+    setShowCamera(false);
+    setReviewMode(false);
     dispatch(setLoading(true)); // Analyzing state
 
     setTimeout(() => {
@@ -87,15 +103,54 @@ export default function Chat() {
       {/* Camera Overlay */}
       {showCamera && (
         <div className="absolute inset-0 z-50 bg-black rounded-3xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
-          <div className="absolute top-4 right-4 z-50">
-            <button onClick={() => setShowCamera(false)} className="bg-black/50 p-2 rounded-full text-white">
-              <X size={24} />
-            </button>
-          </div>
-          <CameraView onCapture={handleCapture} showCaptureButton={true} />
-          <div className="absolute bottom-24 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2">
-            Tap circle to scan
-          </div>
+          {/* Close Button (only when not in review mode or redundant if we have center close) */}
+          {!reviewMode && (
+            <div className="absolute top-4 right-4 z-50">
+              <button onClick={handleClose} className="bg-black/50 p-2 rounded-full text-white">
+                <X size={24} />
+              </button>
+            </div>
+          )}
+
+          <CameraView onCapture={handleCapture} showCaptureButton={!reviewMode} />
+
+          {!reviewMode && (
+            <div className="absolute bottom-24 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2 pointer-events-none">
+              Tap circle to scan
+            </div>
+          )}
+
+          {/* Review Controls */}
+          {reviewMode && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+              <div className="flex gap-8 items-center animate-in zoom-in duration-300 pointer-events-auto mt-64">
+                {/* Left: Retake */}
+                <button
+                  onClick={handleRetake}
+                  className="w-16 h-16 rounded-full bg-gray-100/90 text-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
+                  aria-label="Retake"
+                >
+                  <RefreshCw size={28} />
+                </button>
+                {/* Center: Close */}
+                <button
+                  onClick={handleClose}
+                  className="w-14 h-14 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
+                  aria-label="Close"
+                >
+                  <X size={28} />
+                </button>
+                {/* Right: Confirm */}
+                <button
+                  onClick={handleConfirm}
+                  className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform active:scale-95 ring-4 ring-white/30"
+                  aria-label="Confirm"
+                >
+                  <Check size={40} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
