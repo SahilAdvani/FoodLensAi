@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Camera } from 'lucide-react';
 
-export default function CameraView({ onCapture, onReady }) {
+export default function CameraView({ onCapture, onReady, showCaptureButton }) {
     const videoRef = useRef(null);
     const [hasPermission, setHasPermission] = useState(false);
     const [error, setError] = useState(null);
@@ -61,16 +61,18 @@ export default function CameraView({ onCapture, onReady }) {
             />
 
             {/* Overlay UI */}
-            <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-6 z-10 pointer-events-none">
-                {/* Capture Button Ring */}
-                <div className="p-1 rounded-full border-4 border-white/30 backdrop-blur-sm pointer-events-auto">
-                    <button
-                        onClick={handleCapture}
-                        className="w-16 h-16 rounded-full bg-white hover:bg-gray-100 active:scale-95 transition-all shadow-lg"
-                        aria-label="Capture"
-                    />
+            {showCaptureButton !== false && (
+                <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-6 z-10 pointer-events-none">
+                    {/* Capture Button Ring */}
+                    <div className="p-1 rounded-full border-4 border-white/30 backdrop-blur-sm pointer-events-auto">
+                        <button
+                            onClick={handleCapture}
+                            className="w-16 h-16 rounded-full bg-white hover:bg-gray-100 active:scale-95 transition-all shadow-lg"
+                            aria-label="Capture"
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="absolute top-4 left-0 right-0 text-center pointer-events-none">
                 <span className="bg-black/40 text-white px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-md">

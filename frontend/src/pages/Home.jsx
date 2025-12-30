@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Footer from '@/components/layout/Footer';
 import { Camera, MessageSquare, ArrowRight, ShieldCheck, Zap, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -78,6 +79,9 @@ export default function Home() {
           />
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

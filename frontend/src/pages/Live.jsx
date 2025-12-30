@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { addMessage } from '@/store/chatSlice';
 import CameraView from '@/components/camera/CameraView';
+import VoiceVisualizer from '@/components/live/VoiceVisualizer';
 import { MOCK_INGREDIENTS, LIVE_MODE_CONSTANTS } from '@/constants/mockData';
 import { Volume2, X, RefreshCw } from 'lucide-react';
 
@@ -14,30 +16,36 @@ const STEPS = {
 };
 
 export default function Live() {
+    const dispatch = useDispatch();
     const { currentLanguage } = useSelector((state) => state.language);
+
+    // States
     const [step, setStep] = useState(STEPS.GREETING);
     const [result, setResult] = useState(null);
     const [cameraActive, setCameraActive] = useState(false);
+    const [voiceState, setVoiceState] = useState('idle'); // 'idle' | 'bot-speaking' | 'user-speaking'
 
-    // Get texts based on current language (default to en-IN if missing)
     const texts = LIVE_MODE_CONSTANTS[currentLanguage] || LIVE_MODE_CONSTANTS['en-IN'];
 
-    // Speak utility
+    // Speak utility with Chat Sync & Visualizer State
     const speak = (text, onEnd) => {
-        window.speechSynthesis.cancel(); // Stop overlap
+        // Sync to Chat
+        dispatch(addMessage({ role: 'ai', content: text }));
+
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
 
-        // Basic voice selection logic
         const voices = window.speechSynthesis.getVoices();
         const preferredLang = currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-IN';
         const voice = voices.find(v => v.lang.includes(preferredLang)) || voices[0];
         if (voice) utterance.voice = voice;
+        utterance.rate = 0.9;
 
-        utterance.rate = 0.9; // Slightly slower for clarity
-
-        if (onEnd) {
-            utterance.onend = onEnd;
-        }
+        utterance.onstart = () => setVoiceState('bot-speaking');
+        utterance.onend = () => {
+            setVoiceState('idle');
+            if (onEnd) onEnd();
+        };
 
         window.speechSynthesis.speak(utterance);
     };
@@ -76,32 +84,36 @@ export default function Live() {
         }
     }, [step]);
 
-    // Step 4: Scanning (Simulated Wait) -> Analyzing
+    // Step 4: Scanning
     useEffect(() => {
         if (step === STEPS.SCANNING) {
+            // Simulate "Listening/Waiting" state (User Speaking Visuals)
+            setVoiceState('user-speaking'); // Visualizer shrinks as requested "while user speaking" (simulated here as user is "active")
+
             const timer = setTimeout(() => {
+                setVoiceState('idle');
                 setStep(STEPS.ANALYZING);
                 handleCapture();
-            }, 3000); // 3 seconds of "steady" scanning
+            }, 3000);
             return () => clearTimeout(timer);
         }
     }, [step]);
 
 
     const handleCapture = () => {
-        // Simulate API call
         setTimeout(() => {
-            // Randomly pick an ingredient for demo
             const randomIngredient = MOCK_INGREDIENTS[Math.floor(Math.random() * MOCK_INGREDIENTS.length)];
             setResult(randomIngredient);
             setStep(STEPS.RESULT);
-            speakResult(randomIngredient);
+
+            const desc = currentLanguage === 'hi-IN' ? randomIngredient.description : randomIngredient.description;
+            const text = `${texts.resultPrefix} ${randomIngredient.name}. ${desc}`;
+
+            speakResult(text); // Speak result
         }, 2000);
     };
 
-    const speakResult = (ingredient) => {
-        const desc = currentLanguage === 'hi-IN' ? ingredient.description : ingredient.description; // In real app, Translate description
-        const text = `${texts.resultPrefix} ${ingredient.name}. ${desc}`;
+    const speakResult = (text) => {
         speak(text);
     };
 
@@ -114,7 +126,8 @@ export default function Live() {
         <div className="min-h-[calc(100vh-4rem)] flex flex-col p-4 bg-gray-50 dark:bg-gray-950">
 
             {/* Camera Area */}
-            <div className="flex-1 relative rounded-3xl overflow-hidden bg-black shadow-2xl">
+            <div className={`flex-1 relative rounded-3xl overflow-hidden bg-black shadow-2xl transition-all duration-500 
+                ${step === STEPS.RESULT ? 'h-1/2' : 'h-full'}`}>
                 {!cameraActive && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
                         <p className="animate-pulse">Waiting for camera instructions...</p>
