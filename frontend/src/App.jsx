@@ -14,6 +14,8 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 
+import SmoothScroll from "@/components/SmoothScroll";
+
 export default function App() {
   const { currentLanguage } = useSelector((state) => state.language);
   const { i18n } = useTranslation();
@@ -28,21 +30,23 @@ export default function App() {
 
   return (
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/live" element={<Live />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route
-            path="/chat/history"
-            element={
-              <ProtectedRoute>
-                <ChatHistory />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Layout>
+      <SmoothScroll>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/live" element={<Live />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route
+              path="/chat/history"
+              element={
+                <ProtectedRoute>
+                  <ChatHistory />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Layout>
+      </SmoothScroll>
     </ClerkProvider>
   );
 }
