@@ -6,10 +6,13 @@ import VoiceInput from '@/components/chat/VoiceInput';
 import CameraView from '@/components/camera/CameraView';
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
 import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check } from 'lucide-react';
+import ReactMarkdown from "react-markdown";
 import SEO from '@/components/SEO';
+import useLoader from "@/hooks/useLoader";
 
 export default function Chat() {
   const dispatch = useDispatch();
+  useLoader(true);
   const { t } = useTranslation();
   const { currentChat, isLoading } = useSelector((state) => state.chat);
   const { currentLanguage } = useSelector((state) => state.language);

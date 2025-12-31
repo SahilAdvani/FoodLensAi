@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { Shield, Lock, Eye, FileText } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Footer from '@/components/layout/Footer';
+import useLoader from "@/hooks/useLoader";
 
 export default function PrivacyPolicy() {
+    useLoader(true);
     return (
         <>
             <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">

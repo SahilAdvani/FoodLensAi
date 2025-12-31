@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { Mail, MapPin, Phone, Send, Loader2, CheckCircle2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Footer from '@/components/layout/Footer';
+import useLoader from "@/hooks/useLoader";
 
 export default function Contact() {
+    useLoader(true);
     const [formState, setFormState] = useState('idle'); // idle, submitting, success
 
     const handleSubmit = (e) => {

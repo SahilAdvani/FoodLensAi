@@ -5,6 +5,7 @@ import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Terms from "@/pages/Terms";
 import Live from "@/pages/Live";
 import Chat from "@/pages/Chat";
 import ChatHistory from "@/pages/ChatHistory";
@@ -18,6 +19,7 @@ import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 
 import SmoothScroll from "@/components/SmoothScroll";
+import Loader from "@/components/ui/Loader";
 
 export default function App() {
   const { currentLanguage } = useSelector((state) => state.language);
@@ -35,11 +37,13 @@ export default function App() {
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
       <SmoothScroll>
         <Layout>
+          <Loader />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/live" element={<Live />} />
             <Route path="/chat" element={<Chat />} />
             <Route

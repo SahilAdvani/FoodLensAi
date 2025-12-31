@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '@/components/layout/Footer';
@@ -5,8 +6,10 @@ import SEO from '@/components/SEO';
 import { useTranslation } from 'react-i18next';
 import { Camera, MessageSquare, ArrowRight, ShieldCheck, Zap, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
+import useLoader from "@/hooks/useLoader";
 
 export default function Home() {
+  useLoader(true);
   const { t } = useTranslation();
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">

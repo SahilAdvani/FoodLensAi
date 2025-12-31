@@ -73,8 +73,8 @@ export default function Footer() {
                     <div>
                         <h3 className="text-white font-semibold text-lg mb-6">{t('footer.legal')}</h3>
                         <ul className="space-y-4">
-                            <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Privacy Policy</Link></li>
-                            <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Terms</Link></li>
+                            <li><Link to="/privacy" className="text-gray-400 hover:text-green-400 transition-colors">Privacy Policy</Link></li>
+                            <li><Link to="/terms" className="text-gray-400 hover:text-green-400 transition-colors">Terms</Link></li>
                         </ul>
                     </div>
                 </div>

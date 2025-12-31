@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { addMessage } from '@/store/chatSlice';
@@ -7,6 +8,7 @@ import VoiceVisualizer from '@/components/live/VoiceVisualizer';
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
 import { Volume2, X, RefreshCw, Check } from 'lucide-react';
 import SEO from '@/components/SEO';
+import useLoader from "@/hooks/useLoader";
 
 const STEPS = {
     GREETING: 'greeting',
@@ -22,7 +24,7 @@ export default function Live() {
     const dispatch = useDispatch();
     const { t, i18n } = useTranslation();
     const { currentLanguage } = useSelector((state) => state.language);
-
+    useLoader(true);
     // States
     const [step, setStep] = useState(STEPS.GREETING);
     const [result, setResult] = useState(null);
