@@ -6,9 +6,13 @@ import VoiceInput from '@/components/chat/VoiceInput';
 import CameraView from '@/components/camera/CameraView';
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
 import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check } from 'lucide-react';
+import ReactMarkdown from "react-markdown";
+import SEO from '@/components/SEO';
+import useLoader from "@/hooks/useLoader";
 
 export default function Chat() {
   const dispatch = useDispatch();
+  useLoader(true);
   const { t } = useTranslation();
   const { currentChat, isLoading } = useSelector((state) => state.chat);
   const { currentLanguage } = useSelector((state) => state.language);
@@ -99,6 +103,11 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto p-4 relative">
+      <SEO
+        title="AI Chat"
+        description="Chat with FoodLens AI nutritionist. Ask questions about ingredients, allergies, and health benefits."
+        keywords="nutrition chat, food ai assistant, diet advice, ingredient questions"
+      />
 
       {/* Camera Overlay */}
       {showCamera && (
@@ -155,7 +164,10 @@ export default function Chat() {
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+      <div
+        className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar"
+        data-lenis-prevent
+      >
 
         {currentChat.map((msg, idx) => (
           <div

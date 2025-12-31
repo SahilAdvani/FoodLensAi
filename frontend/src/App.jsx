@@ -2,6 +2,10 @@ import { Routes, Route } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 
 import Home from "@/pages/Home";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Terms from "@/pages/Terms";
 import Live from "@/pages/Live";
 import Chat from "@/pages/Chat";
 import ChatHistory from "@/pages/ChatHistory";
@@ -13,6 +17,9 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_p
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+
+import SmoothScroll from "@/components/SmoothScroll";
+import Loader from "@/components/ui/Loader";
 
 export default function App() {
   const { currentLanguage } = useSelector((state) => state.language);
@@ -28,21 +35,28 @@ export default function App() {
 
   return (
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/live" element={<Live />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route
-            path="/chat/history"
-            element={
-              <ProtectedRoute>
-                <ChatHistory />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Layout>
+      <SmoothScroll>
+        <Layout>
+          <Loader />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/live" element={<Live />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route
+              path="/chat/history"
+              element={
+                <ProtectedRoute>
+                  <ChatHistory />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Layout>
+      </SmoothScroll>
     </ClerkProvider>
   );
 }

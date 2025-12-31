@@ -1,14 +1,23 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
 import { useTranslation } from 'react-i18next';
 import { Camera, MessageSquare, ArrowRight, ShieldCheck, Zap, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
+import useLoader from "@/hooks/useLoader";
 
 export default function Home() {
+  useLoader(true);
   const { t } = useTranslation();
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      <SEO
+        title="Home"
+        description="FoodLens AI - Instant food ingredient analysis for healthier choices. Scan labels or chat with our AI to understand what's in your food."
+        keywords="food analysis, ingredient scanner, health app, nutrition ai, food lens"
+      />
 
       {/* Hero Section */}
       <section className="relative px-6 py-12 lg:py-20 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden">

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Facebook, Twitter, Instagram, Linkedin, Github, Mail, Send } from 'lucide-react';
+import logo from '@/assets/logo_minimal.png';
 
 export default function Footer() {
     const { t } = useTranslation();
@@ -14,7 +15,10 @@ export default function Footer() {
                 {/* Top Section: Newsletter & Brand */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 mb-16 border-b border-gray-800 pb-12">
                     <div className="max-w-md">
-                        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{t('navbar.brand')}</h2>
+                        <div className="flex items-center gap-3 mb-4">
+                            <img src={logo} alt="FoodLens AI" className="h-10 w-10 object-contain" />
+                            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{t('navbar.brand')}</h2>
+                        </div>
                         <p className="text-gray-400 text-lg leading-relaxed">
                             {t('footer.brandDescription')}
                         </p>
@@ -51,7 +55,7 @@ export default function Footer() {
                     <div>
                         <h3 className="text-white font-semibold text-lg mb-6">{t('footer.company')}</h3>
                         <ul className="space-y-4">
-                            <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">About Us</Link></li>
+                            <li><Link to="/about" className="text-gray-400 hover:text-green-400 transition-colors">About Us</Link></li>
                             <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Careers</Link></li>
                         </ul>
                     </div>
@@ -60,7 +64,7 @@ export default function Footer() {
                     <div>
                         <h3 className="text-white font-semibold text-lg mb-6">{t('footer.resources')}</h3>
                         <ul className="space-y-4">
-                            <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Community</Link></li>
+                            <li><Link to="/contact" className="text-gray-400 hover:text-green-400 transition-colors">Contact Us</Link></li>
                             <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Help Center</Link></li>
                         </ul>
                     </div>
@@ -69,8 +73,8 @@ export default function Footer() {
                     <div>
                         <h3 className="text-white font-semibold text-lg mb-6">{t('footer.legal')}</h3>
                         <ul className="space-y-4">
-                            <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Privacy Policy</Link></li>
-                            <li><Link to="/" className="text-gray-400 hover:text-green-400 transition-colors">Terms</Link></li>
+                            <li><Link to="/privacy" className="text-gray-400 hover:text-green-400 transition-colors">Privacy Policy</Link></li>
+                            <li><Link to="/terms" className="text-gray-400 hover:text-green-400 transition-colors">Terms</Link></li>
                         </ul>
                     </div>
                 </div>

@@ -2,11 +2,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import themeReducer from "./themeSlice";
 import languageReducer from "./languageSlice";
 import chatReducer from "./chatSlice";
+import loaderReducer from "./loaderSlice";
 
 export const store = configureStore({
   reducer: {
     theme: themeReducer,
     language: languageReducer,
     chat: chatReducer,
+    loader: loaderReducer,
   },
 });

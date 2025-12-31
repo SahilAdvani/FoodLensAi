@@ -7,6 +7,7 @@ import { toggleLanguage } from '@/store/languageSlice';
 import { setTheme } from '@/store/themeSlice';
 import { Sun, Moon, Monitor, Languages, Camera, MessageSquare, ChevronDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import logo from '@/assets/logo_minimal.png';
 
 export default function Navbar() {
     const dispatch = useDispatch();
@@ -44,6 +45,7 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2">
+                        <img src={logo} alt="FoodLens AI" className="h-8 w-8 object-contain" />
                         <span className="text-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
                             {t('navbar.brand')}
                         </span>
@@ -56,6 +58,12 @@ export default function Navbar() {
                         </Link>
                         <Link to="/chat" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2">
                             <MessageSquare size={18} /> {t('navbar.chat')}
+                        </Link>
+                        <Link to="/about" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors font-medium">
+                            About
+                        </Link>
+                        <Link to="/contact" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors font-medium">
+                            Contact
                         </Link>
                     </div>
 
