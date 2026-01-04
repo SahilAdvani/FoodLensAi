@@ -1,0 +1,12 @@
+{
+    "ingredient": "Salt",
+    "role": "Flavor enhancer / Preservative",
+    "summary": "Salt (sodium chloride) is used to enhance taste and help preserve foods, but excess sodium intake is a major risk factor for high blood pressure. Elevated blood pressure increases the risk of heart disease and stroke, leading causes of death worldwide. Processed foods contribute a large share of dietary sodium, often above physiological needs. Public health guidelines promote reducing salt in processed foods and at the table to lower cardiovascular risk.",
+    "evidence": "Strong for harm at high intakes",
+    "safe_limit": "WHO recommends <5 g salt per adult per day (≈2000 mg sodium)",
+    "sources": [
+        "WHO",
+        "FSSAI",
+        "NCBI/NIH"
+    ]
+}

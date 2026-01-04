@@ -1,0 +1,12 @@
+{
+    "ingredient": "Sodium Citrate",
+    "role": "Acidity regulator / Buffer / Chelating agent",
+    "summary": "Sodium citrate (E331) is the sodium salt of citric acid used to regulate acidity, enhance flavour, and chelate metal ions in beverages, processed cheeses, and many other foods. It improves texture and melt behaviour in cheese products and stabilises fizzy drinks by buffering pH. Regulatory authorities including FDA, EFSA, and JECFA consider sodium citrate safe and classify it as GRAS when used according to good manufacturing practice. Excessive intake may contribute to sodium load, so people needing to restrict sodium should be mindful of total dietary sources.",
+    "evidence": "Generally supportive of safety at normal intakes",
+    "safe_limit": "No numeric ADI for some uses; permitted at levels consistent with good manufacturing practice and product-specific regulations",
+    "sources": [
+        "FDA",
+        "EFSA",
+        "WHO/JECFA"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "ingredient": "Lecithin",
+    "role": "Emulsifier / Stabilizer",
+    "summary": "Lecithin is a mixture of phospholipids, commonly derived from soy or sunflower, used to emulsify and stabilize fats in foods such as chocolate, bakery products, and spreads. It helps improve texture, prevent separation, and can act as a mild antioxidant in formulations. Lecithin from common sources has GRAS status in the US and is widely accepted as safe at typical use levels in foods. Main concerns relate to allergenicity from source materials (e.g., soy), so sensitive consumers should check labels.",
+    "evidence": "Generally supportive of safety at normal intakes",
+    "safe_limit": "Used under good manufacturing practice with no numeric ADI for most food uses",
+    "sources": [
+        "FDA",
+        "WHO/JECFA",
+        "EFSA"
+    ]
+}

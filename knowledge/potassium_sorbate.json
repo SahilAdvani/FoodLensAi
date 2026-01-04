@@ -1,0 +1,12 @@
+{
+    "ingredient": "Potassium Sorbate",
+    "role": "Preservative",
+    "summary": "Potassium sorbate is the potassium salt of sorbic acid, used to inhibit molds, yeasts, and some bacteria, especially in acidic foods and beverages. It extends shelf life of products such as cheeses, baked goods, and fruit preparations by slowing spoilage. JECFA has set an acceptable daily intake of up to 25 mg/kg body weight per day for sorbic acid and its salts, reflecting a relatively wide safety margin. Mild irritation or sensitivity reactions can occur in some people at higher exposures, so use levels are regulated by food authorities.",
+    "evidence": "Generally supportive of safety within ADI",
+    "safe_limit": "ADI up to 25 mg/kg body weight per day (as sorbic acid equivalents)",
+    "sources": [
+        "WHO/JECFA",
+        "Health Canada",
+        "FDA"
+    ]
+}

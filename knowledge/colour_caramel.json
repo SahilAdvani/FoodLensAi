@@ -1,0 +1,12 @@
+{
+    "ingredient": "Colour (Caramel)",
+    "role": "Colour additive",
+    "summary": "Caramel colour is a group of brown colour additives produced by controlled heating of carbohydrates and used widely in soft drinks, sauces, and baked goods. Different classes (I–IV) are manufactured with specific reactants; some processes can generate contaminants such as 4-methylimidazole (4-MEI). Regulatory bodies evaluate each class and set limits on both use levels and contaminants like 4-MEI to manage potential cancer risk. At typical dietary exposures within regulatory limits, population risk is considered low, but high consumption of heavily coloured sodas may increase intake.",
+    "evidence": "Mixed; generally permitted, with contaminant-related concerns",
+    "safe_limit": "Class- and jurisdiction-specific maximum use levels and contaminant limits (e.g., 4-MEI caps)",
+    "sources": [
+        "WHO/JECFA",
+        "EFSA",
+        "FDA"
+    ]
+}
