@@ -37,7 +37,7 @@ export default function Chat() {
         : "Hello! Want to check ingredients? Type 'scan' or ask me.";
       dispatch(addMessage({ role: 'ai', content: greeting }));
     }
-  }, [currentLanguage]); // Run when lang changes or mount (if empty)
+  }, [currentLanguage]);
 
   const handleSendMessage = (text) => {
     if (!text.trim()) return;
@@ -47,9 +47,6 @@ export default function Chat() {
     setInputStr('');
     dispatch(setLoading(true));
 
-    // Simulate AI decision to open camera
-    // For demo: Always open camera if text is "scan", or randomly for others? 
-    // User requested "after some msg a camera api call". Let's do it for any message for now to demo.
 
     setTimeout(() => {
       const aiPreText = currentLanguage === 'hi-IN'

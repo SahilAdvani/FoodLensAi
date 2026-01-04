@@ -1,11 +1,16 @@
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
+import Loader from "@/components/ui/Loader";
 
 export default function ProtectedRoute({ children }) {
-  const { isSignedIn } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (!isSignedIn) {
-    return <Navigate to="/chat" replace />;
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return children;
