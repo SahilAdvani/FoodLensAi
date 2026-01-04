@@ -105,4 +105,6 @@ CONTEXT:
             timeout=30,
         )
 
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content.strip()
+        print(f"DEBUG: Raw RAG response:\n{content}")
+        return content

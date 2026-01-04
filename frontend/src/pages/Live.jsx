@@ -9,6 +9,8 @@ import { MOCK_INGREDIENTS } from '@/constants/mockData';
 import { Volume2, X, RefreshCw, Check } from 'lucide-react';
 import SEO from '@/components/SEO';
 import useLoader from "@/hooks/useLoader";
+import { useAuth } from "@/context/AuthContext";
+import { createSession, analyzeImage } from "@/services/api";
 
 const STEPS = {
     GREETING: 'greeting',
@@ -24,12 +26,18 @@ export default function Live() {
     const dispatch = useDispatch();
     const { t, i18n } = useTranslation();
     const { currentLanguage } = useSelector((state) => state.language);
+    const { user } = useAuth();
     useLoader(true);
     // States
     const [step, setStep] = useState(STEPS.GREETING);
     const [result, setResult] = useState(null);
     const [cameraActive, setCameraActive] = useState(false);
     const [voiceState, setVoiceState] = useState('idle'); // 'idle' | 'bot-speaking' | 'user-speaking'
+
+    // API State
+    const [sessionId, setSessionId] = useState(null);
+    const [capturedImage, setCapturedImage] = useState(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Speak utility with Chat Sync & Visualizer State
     const speak = (text, onEnd) => {
@@ -54,8 +62,19 @@ export default function Live() {
         window.speechSynthesis.speak(utterance);
     };
 
-    // Step 1: Greeting on Mount
+    // Step 1: Greeting on Mount + Session Creation
     useEffect(() => {
+        // Create Session
+        const initSession = async () => {
+            try {
+                const id = await createSession("live", user?.id);
+                setSessionId(id);
+            } catch (err) {
+                console.error("Failed to init session", err);
+            }
+        };
+        initSession();
+
         // Small delay to ensure voices are loaded (browser quirk)
         const timer = setTimeout(() => {
             speak(t('live.greeting'), () => {
@@ -63,7 +82,7 @@ export default function Live() {
             });
         }, 1000);
         return () => clearTimeout(timer);
-    }, [currentLanguage]);
+    }, [currentLanguage, user]);
 
     // Step 2: Camera Permission Instruction
     useEffect(() => {
@@ -97,8 +116,24 @@ export default function Live() {
     }, [step]);
 
 
-    const handleCapture = () => {
+    const handleCapture = (imageSrc) => {
+        // Assuming CameraView passes the base64 or blob.
+        // If it passes base64, we need to convert to Blob.
+        // Let's assume it passes a Blob or we can handle it.
+        // We'll store whatever it passes and verify CameraView later.
+        setCapturedImage(imageSrc);
         setStep(STEPS.REVIEW);
+    };
+
+    const handleFileUpload = (file) => {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setCapturedImage(reader.result); // Base64 string
+            setStep(STEPS.REVIEW);
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleRetake = () => {
@@ -110,20 +145,100 @@ export default function Live() {
         setStep(STEPS.STEADY_INSTRUCTION);
         speak(t('live.steady'));
     };
-
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         setStep(STEPS.ANALYZING);
+        setIsAnalyzing(true);
 
-        setTimeout(() => {
-            const randomIngredient = MOCK_INGREDIENTS[Math.floor(Math.random() * MOCK_INGREDIENTS.length)];
-            setResult(randomIngredient);
+        try {
+            // Ensure Session ID exists
+            let currentSessionId = sessionId;
+            if (!currentSessionId) {
+                console.log("Session ID missing, attempting to create...");
+                try {
+                    currentSessionId = await createSession("live", user?.id);
+                    setSessionId(currentSessionId);
+                } catch (err) {
+                    console.error("Failed to recover session:", err);
+                    speak("Connection error. Please refresh and try again.");
+                    setStep(STEPS.STEADY_INSTRUCTION);
+                    setIsAnalyzing(false);
+                    return;
+                }
+            }
+
+            // Need to ensure capturedImage is a Blob
+            let imageBlob = capturedImage;
+
+            // If it's a base64 string (data:image...), convert to blob
+            if (typeof capturedImage === 'string' && capturedImage.startsWith('data:')) {
+                const res = await fetch(capturedImage);
+                imageBlob = await res.blob();
+            }
+
+            const data = await analyzeImage(imageBlob, currentSessionId, user?.id);
+
+            const resultData = data.data; // API response object
+
+            let resultObj = null;
+
+            // correct handling for pipeline response structure
+            if (resultData && resultData.analysis) {
+                console.log("DEBUG: Raw analysis string:", resultData.analysis);
+                try {
+                    // Clean up markdown code blocks if present
+                    let jsonString = resultData.analysis;
+                    if (jsonString.includes('```json')) {
+                        jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '');
+                    } else if (jsonString.includes('```')) {
+                        jsonString = jsonString.replace(/```/g, '');
+                    }
+
+                    const parsedAnalysis = JSON.parse(jsonString);
+                    console.log("DEBUG: Parsed analysis:", parsedAnalysis);
+
+                    if (parsedAnalysis.results && parsedAnalysis.results.length > 0) {
+                        const firstItem = parsedAnalysis.results[0];
+                        resultObj = {
+                            name: firstItem.ingredient,
+                            description: firstItem.explanation,
+                            safety_level: firstItem.evidence && firstItem.evidence.toLowerCase().includes("risk") ? "Code Red" : "Code Green"
+                        };
+                    } else {
+                        console.warn("DEBUG: No results in parsed analysis");
+                    }
+                } catch (e) {
+                    console.error("Failed to parse analysis JSON. Raw string:", resultData.analysis, "Error:", e);
+                }
+            } else {
+                console.log("DEBUG: No analysis field in resultData", resultData);
+            }
+
+            // Fallback if parsing failed or no results
+            if (!resultObj) {
+                const isNoData = resultData.ingredients && resultData.ingredients.length === 0;
+
+                resultObj = {
+                    name: isNoData ? "No Ingredients Detected" : "Scan Complete",
+                    description: resultData.message || resultData.raw_text || "No ingredients identified. Please ensure the image is clear and contains readable text.",
+                    safety_level: "Info"
+                };
+            }
+
+            setResult(resultObj);
+
+            const desc = resultObj.description;
+            const text = `${t('live.resultPrefix')} ${resultObj.name}. ${desc}`;
+
             setStep(STEPS.RESULT);
-
-            const desc = currentLanguage === 'hi-IN' ? randomIngredient.description : randomIngredient.description;
-            const text = `${t('live.resultPrefix')} ${randomIngredient.name}. ${desc}`;
-
             speakResult(text);
-        }, 2000);
+
+        } catch (error) {
+            console.error(error);
+            speak("Sorry, I couldn't analyze that properly. Please try again.");
+            setStep(STEPS.STEADY_INSTRUCTION);
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const speakResult = (text) => {
@@ -132,6 +247,7 @@ export default function Live() {
 
     const resetFlow = () => {
         setResult(null);
+        setCapturedImage(null);
         setStep(STEPS.STEADY_INSTRUCTION); // Go back to steady -> scan
     };
 
@@ -158,6 +274,7 @@ export default function Live() {
                         onReady={handleCameraReady}
                         showCaptureButton={step === STEPS.SCANNING}
                         prompt={step === STEPS.SCANNING ? t('live.steady') : null}
+                        onFileUpload={handleFileUpload}
                     />
                 )}
 
