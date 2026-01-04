@@ -1,0 +1,12 @@
+{
+    "ingredient": "Wheat Flour (Refined)",
+    "role": "Base carbohydrate / Structure builder",
+    "summary": "Refined wheat flour (maida) is produced by removing the bran and germ, leaving a fine starch-rich endosperm that provides structure and volume to baked and fried products. This processing strips most fibre, vitamins, and minerals, leading to high-glycaemic 'empty' calories that can spike blood sugar. High intake of refined flour products is associated with increased risk of obesity, insulin resistance, type 2 diabetes, and related metabolic disorders when displacing whole grains. Occasional consumption in an otherwise balanced diet is less concerning, but many public health guidelines favour whole grains over refined flours.",
+    "evidence": "Strong for harm at high intakes replacing whole grains",
+    "safe_limit": "No numeric limit; advised to limit refined grains and prefer whole grains for most carbohydrate intake",
+    "sources": [
+        "NCBI/NIH",
+        "FSSAI",
+        "Dietetic guidelines"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "ingredient": "Palm Oil",
+    "role": "Vegetable oil / Fat source",
+    "summary": "Palm oil is a widely used vegetable oil obtained from the fruit of the oil palm and is common in processed foods, frying fats, and spreads. It is semi-solid at room temperature and relatively high in saturated fats, which can influence blood cholesterol and cardiovascular risk depending on overall diet and processing. Some studies suggest neutral or mixed effects on heart health compared with other fats, while others note potential increases in LDL cholesterol when heavily refined or consumed in large amounts. Environmental and sustainability concerns are also significant, though they relate more to production than direct health effects.",
+    "evidence": "Mixed",
+    "safe_limit": "No specific ADI; recommended to moderate intake of saturated-fat-rich oils within total dietary fat guidelines",
+    "sources": [
+        "WHO",
+        "NCBI/NIH",
+        "WebMD"
+    ]
+}

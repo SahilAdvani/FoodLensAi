@@ -1,0 +1,12 @@
+{
+    "ingredient": "Glucose Syrup",
+    "role": "Sweetener / Texturizer",
+    "summary": "Glucose syrup is a concentrated liquid sweetener made by hydrolysing starch (often from corn or wheat) into glucose-rich sugars used to sweeten, thicken, and improve texture. It helps prevent crystallisation, retain moisture, and extend shelf life in confectionery, baked goods, and processed foods. Nutritionally, it is a source of rapidly absorbed sugar and calories with little micronutrient value, and regular high intake is linked to obesity, high blood sugar, and poor dental health. Health authorities treat it similarly to other added sugars, advising that consumption be kept low as part of limits on total free or added sugars.",
+    "evidence": "Strong for harm at high intakes",
+    "safe_limit": "No specific ADI; should fit within recommended limits for added/free sugars (e.g., WHO <10% of energy)",
+    "sources": [
+        "WHO",
+        "FDA",
+        "Healthline"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "ingredient": "Monosodium Glutamate",
+    "role": "Flavour enhancer",
+    "summary": "Monosodium glutamate (MSG) is the sodium salt of glutamic acid used to enhance savoury umami taste in soups, snacks, seasonings, and many processed foods. Glutamate also occurs naturally in foods like tomatoes, cheese, and soy sauce, and the body metabolises added and natural glutamate similarly. JECFA and other expert committees have concluded that normal dietary intake of glutamates does not pose a health hazard, assigning an 'ADI not specified' and indicating no need for a numerical daily limit. While some individuals report transient sensitivity symptoms, controlled human studies have not consistently confirmed serious adverse effects at typical consumption levels.",
+    "evidence": "Generally supportive of safety at normal intakes",
+    "safe_limit": "ADI not specified; use according to good manufacturing practice while staying within sodium intake recommendations",
+    "sources": [
+        "WHO/JECFA",
+        "NCBI/NIH",
+        "FDA"
+    ]
+}

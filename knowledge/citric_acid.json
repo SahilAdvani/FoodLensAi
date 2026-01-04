@@ -1,0 +1,13 @@
+{
+    "ingredient": "Citric Acid",
+    "role": "Acidulant / Chelating agent",
+    "summary": "Citric acid (E330) is an organic acid used to acidify foods, enhance sour taste, and chelate metals, which helps stabilize color and flavor. It is produced industrially mainly by microbial fermentation and is approved as a safe food additive by FDA, EFSA, and JECFA at typical use levels. Some reports suggest that manufactured citric acid may trigger inflammatory or allergic-type reactions in susceptible individuals, though systematic safety data are limited. Overall population risk appears low when intake stays within normal food-use ranges, but sensitive consumers may need to monitor exposure.",
+    "evidence": "Generally supportive of safety at normal intakes, emerging concerns in susceptible individuals",
+    "safe_limit": "No single global numeric limit; use is governed by GMP and product-specific regulations",
+    "sources": [
+        "FDA",
+        "JECFA",
+        "EFSA",
+        "NCBI/NIH"
+    ]
+}

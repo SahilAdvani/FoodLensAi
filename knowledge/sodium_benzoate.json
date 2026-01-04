@@ -1,0 +1,12 @@
+{
+  "ingredient": "Sodium Benzoate",
+  "role": "Preservative",
+  "summary": "Sodium benzoate is a benzoic acid salt used to inhibit growth of bacteria, yeasts, and molds in acidic foods and beverages. It has GRAS status from the FDA and is widely permitted as a food preservative within specified concentration limits. Authorities and manufacturers commonly cap its use at about 0.1% by weight in foods, and an acceptable daily intake of 0–5 mg/kg body weight has been set. Concerns include potential formation of benzene in the presence of ascorbic acid under certain conditions and possible hyperactivity effects when combined with some colorants, so exposure monitoring is recommended.",
+  "evidence": "Mixed",
+  "safe_limit": "Up to 0.1% in foods and ADI 0–5 mg/kg body weight per day",
+  "sources": [
+    "WHO/JECFA",
+    "FDA",
+    "FSSAI"
+  ]
+}

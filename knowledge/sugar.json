@@ -1,0 +1,12 @@
+{
+    "ingredient": "Sugar",
+    "role": "Sweetener / Energy source",
+    "summary": "Sugar (sucrose and other free sugars) is a simple carbohydrate added to foods and drinks to provide sweetness and quick energy. High intake of free sugars is associated with weight gain, obesity, and increased risk of noncommunicable diseases such as type 2 diabetes and cardiovascular disease. Frequent consumption also promotes dental caries, especially when intake exceeds around 10% of total energy. Health agencies recommend limiting added and free sugars to improve overall diet quality and reduce disease risk.",
+    "evidence": "Strong for harm at high intakes",
+    "safe_limit": "WHO recommends free sugars <10% of total energy, with <5% for additional health benefits",
+    "sources": [
+        "WHO",
+        "NCBI/NIH",
+        "FDA"
+    ]
+}

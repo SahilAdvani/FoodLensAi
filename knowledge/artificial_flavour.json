@@ -1,0 +1,12 @@
+{
+    "ingredient": "Artificial Flavour",
+    "role": "Flavouring agent",
+    "summary": "Artificial flavours are chemically defined substances or mixtures synthetically produced to mimic natural flavours in foods and beverages. Many flavouring substances are classified as GRAS or approved food additives when safety data show low risk at intended use levels. Regulations require that flavourings be safe, used in the minimum amount needed, and properly declared on labels, often as “artificial flavour(s)”. Risks depend on the specific compound; some have occupational or high-exposure concerns, while normal dietary exposures are generally considered low risk.",
+    "evidence": "Compound-specific; generally supportive of safety for approved GRAS flavourings",
+    "safe_limit": "No single limit; each approved substance has its own acceptable use level under GRAS or food additive regulations",
+    "sources": [
+        "FDA",
+        "WHO/JECFA",
+        "EFSA"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "ingredient": "Preservative",
+    "role": "Shelf-life extender / Antimicrobial or antioxidant",
+    "summary": "Preservatives are intentional food additives used to slow microbial growth, enzymatic spoilage, and oxidation, thereby extending shelf life and maintaining safety. They include natural options (like salt and sugar) and synthetic chemicals (such as benzoates, sorbates, nitrites, and sulfites), each with specific mechanisms and permitted uses. Regulatory agencies classify and approve preservatives, set maximum use levels, and require clear labelling to manage consumer exposure. Potential risks range from hypersensitivity reactions to formation of harmful by-products if misuse occurs, so adherence to regulatory limits is crucial.",
+    "evidence": "Mixed; essential for safety but risk depends on type and dose",
+    "safe_limit": "Preservative-specific maximum levels and ADIs set by food safety authorities",
+    "sources": [
+        "WHO/JECFA",
+        "FSSAI",
+        "FDA"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "ingredient": "Emulsifier",
+    "role": "Texture stabilizer / Emulsifying agent",
+    "summary": "Emulsifiers are a group of additives (such as lecithins, mono- and diglycerides, and various E-number compounds) that stabilize mixtures of water and fat, improving texture and shelf life. They are widely used in ultra-processed foods like baked goods, sauces, and desserts to prevent separation and enhance mouthfeel. Regulatory bodies evaluate each emulsifier for safety and set ADIs or good manufacturing practice conditions. Emerging observational research links high intake of some emulsifiers with altered gut microbiota and increased cardiovascular disease risk, suggesting caution with very high consumption of ultra-processed foods.",
+    "evidence": "Mixed; approved at regulated levels, but concerns at high UPF intake",
+    "safe_limit": "Substance-specific ADIs or GMP conditions defined by authorities",
+    "sources": [
+        "WHO/JECFA",
+        "EFSA",
+        "BMJ"
+    ]
+}
