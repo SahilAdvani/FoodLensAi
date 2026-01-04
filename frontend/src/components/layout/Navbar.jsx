@@ -1,20 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useClerk, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { toggleLanguage } from '@/store/languageSlice';
 import { setTheme } from '@/store/themeSlice';
-import { Sun, Moon, Monitor, Languages, Camera, MessageSquare, ChevronDown, Menu, X, Download, Info, Mail, Shield, FileText } from 'lucide-react';
+import { Sun, Moon, Monitor, Languages, Camera, MessageSquare, ChevronDown, Menu, X, Download, Info, Mail, Shield, FileText, User, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import logo from '@/assets/logo_minimal.png';
 
 export default function Navbar() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const { currentLanguage } = useSelector((state) => state.language);
     const { mode } = useSelector((state) => state.theme);
-    const clerk = useClerk();
+    const { user, signOut } = useAuth();
+
+    // User Menu State
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const userMenuRef = useRef(null);
 
     // UI States
     const [isThemeOpen, setIsThemeOpen] = useState(false);
@@ -51,6 +56,7 @@ export default function Navbar() {
         const handleClickOutside = (event) => {
             if (themeRef.current && !themeRef.current.contains(event.target)) setIsThemeOpen(false);
             if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) setIsMoreMenuOpen(false);
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -125,14 +131,38 @@ export default function Navbar() {
 
                         {/* Auth moved before More */}
                         <div className="">
-                            <SignedOut>
-                                <button onClick={() => clerk.openSignIn()} className="text-gray-700 dark:text-gray-200 hover:text-green-600 font-medium text-sm">
+                            {!user ? (
+                                <Link to="/login" className="text-gray-700 dark:text-gray-200 hover:text-green-600 font-medium text-sm">
                                     {t('navbar.login')}
-                                </button>
-                            </SignedOut>
-                            <SignedIn>
-                                <UserButton afterSignOutUrl="/" />
-                            </SignedIn>
+                                </Link>
+                            ) : (
+                                <div className="relative" ref={userMenuRef}>
+                                    <button
+                                        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                        className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                            <User size={18} />
+                                        </div>
+                                    </button>
+                                    <AnimatePresence>
+                                        {isUserMenuOpen && (
+                                            <DropdownMenu>
+                                                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800">
+                                                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                                </div>
+                                                <button
+                                                    onClick={signOut}
+                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                >
+                                                    <LogOut size={16} />
+                                                    Sign Out
+                                                </button>
+                                            </DropdownMenu>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            )}
                         </div>
 
 
@@ -221,12 +251,14 @@ export default function Navbar() {
                                     </button>
                                 </div>
                                 <div className="">
-                                    <SignedOut>
-                                        <button onClick={() => clerk.openSignIn()} className="text-sm font-medium text-green-600">Login</button>
-                                    </SignedOut>
-                                    <SignedIn>
-                                        <UserButton afterSignOutUrl="/" />
-                                    </SignedIn>
+                                    {!user ? (
+                                        <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-green-600">Login</Link>
+                                    ) : (
+                                        <button onClick={signOut} className="flex items-center gap-2 text-sm font-medium text-red-600">
+                                            <LogOut size={16} />
+                                            Sign Out
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

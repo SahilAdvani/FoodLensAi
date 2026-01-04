@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { ClerkProvider } from "@clerk/clerk-react";
+import { AuthProvider } from "@/context/AuthContext";
 
 import Home from "@/pages/Home";
 import About from "@/pages/About";
@@ -9,10 +9,11 @@ import Terms from "@/pages/Terms";
 import Live from "@/pages/Live";
 import Chat from "@/pages/Chat";
 import ChatHistory from "@/pages/ChatHistory";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import Layout from "@/components/layout/Layout";
-
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_placeholder";
 
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -34,12 +35,15 @@ export default function App() {
   }, [currentLanguage, i18n]);
 
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+    <AuthProvider>
       <SmoothScroll>
         <Layout>
           <Loader />
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -57,6 +61,6 @@ export default function App() {
           </Routes>
         </Layout>
       </SmoothScroll>
-    </ClerkProvider>
+    </AuthProvider>
   );
 }
