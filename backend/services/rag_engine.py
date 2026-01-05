@@ -41,7 +41,7 @@ class RAGEngine:
             for doc in results
         ]
 
-    def explain_ingredients_batch(self, ingredients: List[str]) -> Dict:
+    def explain_ingredients_batch(self, ingredients: List[str], language: str = "en") -> Dict:
         """
         Explain multiple ingredients in ONE call, but with strict separation.
         """
@@ -67,6 +67,10 @@ class RAGEngine:
 
         full_context = "\n\n".join(ingredient_sections)
 
+        lang_instruction = ""
+        if "hi" in language.lower():
+            lang_instruction = "IMPORTANT: Write the 'explanation' and 'role' field values in Hindi/Hinglish. Keep the 'ingredient' name in English or transliterated Hindi. Keep JSON keys standard English."
+
         prompt = f"""
 You are a food safety assistant.
 
@@ -76,7 +80,10 @@ CRITICAL RULES:
 - DO NOT merge ingredients
 - Explain EACH ingredient SEPARATELY
 - If evidence is mixed, state that clearly
+- Explain in simple words for a layperson. Avoid technical jargon.
+- Focus on awareness: Is it Good/Bad? Why?
 - Keep tone calm and consumer-friendly
+- {lang_instruction}
 
 RETURN STRICT JSON ONLY in this format:
 
@@ -86,7 +93,7 @@ RETURN STRICT JSON ONLY in this format:
       "ingredient": "<name>",
       "role": "<role>",
       "evidence": "<evidence>",
-      "explanation": "<short explanation>"
+      "explanation": "<short explanation in simple words>"
     }}
   ]
 }}
@@ -133,7 +140,7 @@ CONTEXT:
 
         # 3. Construct Prompt
         prompt = f"""
-You are FoodLens AI, a helpful nutrition assistant.
+You are FoodLens AI, a helpful nutrition assistant using simple words.
 
 KNOWLEDGE BASE (Scientific Facts):
 {knowledge_text}
@@ -145,9 +152,12 @@ CURRENT QUESTION: {query}
 
 INSTRUCTIONS:
 - Answer the user's question using the KNOWLEDGE BASE.
+- Explain complex terms in very simple words (like explaining to a non-expert).
+- Focus on awareness/health impact.
 - Use CONVERSATION HISTORY to understand context (e.g., if user says "is it safe?", look at what we discussed previously).
 - If the answer isn't in the knowledge base, use general food safety knowledge but mention it's general advice.
 - Keep answers concise and helpful.
+- END WITH A SUGGESTION: "Do you want to know more about [related ingredient]?" or similar.
 """
 
         response = self.client.chat.completions.create(

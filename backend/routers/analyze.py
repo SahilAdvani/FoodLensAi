@@ -12,7 +12,8 @@ pipeline = FoodAnalysisPipeline()
 async def analyze_image(
     image: UploadFile = File(...),
     session_id: str = Form(...),
-    user_id: Optional[str] = Form(None)
+    user_id: Optional[str] = Form(None),
+    language: str = Form("en")
 ):
     if not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid image file")
@@ -46,7 +47,7 @@ async def analyze_image(
 
     try:
         # 2. Analyze
-        result = pipeline.analyze_image(image_bytes)
+        result = pipeline.analyze_image(image_bytes, language=language)
         print(f"DEBUG: Pipeline result keys: {result.keys()}")
         if 'analysis' in result:
              print(f"DEBUG: Analysis type: {type(result['analysis'])}")
@@ -67,13 +68,18 @@ async def analyze_image(
              parsed = json.loads(clean_json)
              if "results" in parsed and isinstance(parsed["results"], list):
                  formatted_content = ""
+                 suggested_ingredients = []
                  for item in parsed["results"]:
                      name = item.get('ingredient', 'Unknown')
+                     suggested_ingredients.append(name)
                      evidence = item.get('evidence', '')
                      explanation = item.get('explanation', '')
                      safety = '⚠️ Caution' if 'risk' in evidence.lower() or 'unsafe' in evidence.lower() else '✅ Safe'
                      
                      formatted_content += f"### {name} {safety}\n{explanation}\n\n"
+                
+                 # Friendly Awareness Footer
+                 formatted_content += "\n\n**Do you want to know more about any of these? Just tap the mic and ask!** 🎙️"
              else:
                  formatted_content = result.get("message", "Analysis complete but no ingredients identified.")
                  

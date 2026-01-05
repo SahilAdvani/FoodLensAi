@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { AnimatePresence, motion } from "framer-motion";
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { addMessage } from '@/store/chatSlice';
 import CameraView from '@/components/camera/CameraView';
-import VoiceVisualizer from '@/components/live/VoiceVisualizer';
-import VoiceInput from "@/components/chat/VoiceInput";
-import { MOCK_INGREDIENTS } from '@/constants/mockData';
-import { Volume2, X, RefreshCw, Check, MessageSquare, Loader2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import useLoader from "@/hooks/useLoader";
 import { useAuth } from "@/context/AuthContext";
 import { createSession, analyzeImage, sendMessage } from "@/services/api";
+
+// Subcomponents
+import LiveGreeting from '@/components/live/LiveGreeting';
+import LiveReview from '@/components/live/LiveReview';
+import LiveAnalyzing from '@/components/live/LiveAnalyzing';
+import LiveResult from '@/components/live/LiveResult';
 
 const STEPS = {
     GREETING: 'greeting',
@@ -25,7 +26,7 @@ const STEPS = {
 
 export default function Live() {
     const dispatch = useDispatch();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { currentLanguage } = useSelector((state) => state.language);
     const { user } = useAuth();
     useLoader(true);
@@ -44,6 +45,20 @@ export default function Live() {
     const [conversation, setConversation] = useState([]);
     const [isResponding, setIsResponding] = useState(false);
 
+    // Robust Voice Loading
+    const [voicesLoaded, setVoicesLoaded] = useState(false);
+
+    useEffect(() => {
+        const loadVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) setVoicesLoaded(true);
+        };
+
+        loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        return () => { window.speechSynthesis.onvoiceschanged = null; };
+    }, []);
+
     // Speak utility with Chat Sync & Visualizer State
     const speak = (text, onEnd) => {
         // Sync to Chat
@@ -52,11 +67,30 @@ export default function Live() {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
 
+        // Ensure voices are fresh
         const voices = window.speechSynthesis.getVoices();
-        const preferredLang = currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-IN';
-        const voice = voices.find(v => v.lang.includes(preferredLang)) || voices[0];
-        if (voice) utterance.voice = voice;
-        utterance.rate = 0.9;
+        const isHindi = currentLanguage === 'hi-IN';
+
+        let voice = null;
+        if (isHindi) {
+            // Priority list for better Hindi voices
+            voice = voices.find(v => v.name.includes("Google हिन्दी") || v.name.includes("Google Hindi")) ||
+                voices.find(v => v.name.includes("Microsoft Hemant") || v.name.includes("Microsoft Kalpana")) ||
+                voices.find(v => v.lang.includes("hi-IN"));
+
+            utterance.rate = 0.9;
+        } else {
+            // Priority for English
+            voice = voices.find(v => v.lang.includes("en-IN") || v.lang.includes("en-US"));
+            utterance.rate = 1.0;
+        }
+
+        if (voice) {
+            utterance.voice = voice;
+            utterance.lang = voice.lang; // Explicitly set lang from voice
+        } else if (isHindi) {
+            utterance.lang = 'hi-IN'; // Fallback
+        }
 
         utterance.onstart = () => setVoiceState('bot-speaking');
         utterance.onend = () => {
@@ -82,9 +116,11 @@ export default function Live() {
 
         // Small delay to ensure voices are loaded (browser quirk)
         const timer = setTimeout(() => {
-            speak(t('live.greeting'), () => {
-                setStep(STEPS.CAMERA_PERMISSION);
-            });
+            if (step === STEPS.GREETING) {
+                speak(t('live.greeting'), () => {
+                    setStep(STEPS.CAMERA_PERMISSION);
+                });
+            }
         }, 1000);
         return () => clearTimeout(timer);
     }, [currentLanguage, user]);
@@ -146,6 +182,7 @@ export default function Live() {
         setStep(STEPS.STEADY_INSTRUCTION);
         speak(t('live.steady'));
     };
+
     const handleConfirm = async () => {
         setStep(STEPS.ANALYZING);
         setIsAnalyzing(true);
@@ -177,7 +214,7 @@ export default function Live() {
                 imageBlob = await res.blob();
             }
 
-            const data = await analyzeImage(imageBlob, currentSessionId, user?.id);
+            const data = await analyzeImage(imageBlob, currentSessionId, user?.id, currentLanguage);
 
             const resultData = data.data; // API response object
 
@@ -275,6 +312,13 @@ export default function Live() {
         }
     };
 
+    const handleSkipToScan = () => {
+        window.speechSynthesis.cancel();
+        setVoiceState('idle');
+        setStep(STEPS.SCANNING);
+        setCameraActive(true); // Ensure camera is on
+    };
+
     const resetFlow = () => {
         setResult(null);
         setCapturedImage(null);
@@ -291,14 +335,10 @@ export default function Live() {
             />
 
             {/* Camera Area */}
-            <div className={`flex-1 relative rounded-3xl overflow-hidden bg-black shadow-2xl transition-all duration-500 
-                ${step === STEPS.RESULT ? 'h-2/5' : 'h-full'}`}>
-                {!cameraActive && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
-                        <p className="animate-pulse">{t('live.waiting')}</p>
-                    </div>
-                )}
+            <div className={`flex-1 md:flex-none w-full max-w-4xl mx-auto relative rounded-3xl overflow-hidden bg-black shadow-2xl transition-all duration-500 
+                ${step === STEPS.RESULT ? 'h-2/5 md:h-[40vh]' : 'h-full md:h-auto'}`}>
 
+                {/* Camera View - Always mounted if active, handles its own visibility via imageSrc */}
                 {cameraActive && (
                     <CameraView
                         onCapture={handleCapture}
@@ -306,132 +346,44 @@ export default function Live() {
                         showCaptureButton={step === STEPS.SCANNING}
                         prompt={step === STEPS.SCANNING ? t('live.steady') : null}
                         onFileUpload={handleFileUpload}
-                    // If logic to freeze on RESULT
+                        imageSrc={capturedImage}
                     />
                 )}
 
-                {/* Overlays based on Step */}
-                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-20">
+                {/* Subcomponents for each step */}
 
-                    {step === STEPS.REVIEW && (
-                        <div className="flex gap-8 items-center animate-in zoom-in duration-300 pointer-events-auto z-50">
-                            {/* Left: Retake */}
-                            <button
-                                onClick={handleRetake}
-                                className="w-16 h-16 rounded-full bg-gray-100/90 text-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
-                                aria-label="Retake"
-                            >
-                                <RefreshCw size={28} />
-                            </button>
-                            {/* Center: Close */}
-                            <button
-                                onClick={handleClose}
-                                className="w-14 h-14 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
-                                aria-label="Close"
-                            >
-                                <X size={28} />
-                            </button>
-                            {/* Right: Confirm */}
-                            <button
-                                onClick={handleConfirm}
-                                className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform active:scale-95 ring-4 ring-white/30"
-                                aria-label="Confirm"
-                            >
-                                <Check size={40} />
-                            </button>
-                        </div>
-                    )}
+                {/* Greeting / Instructions */}
+                {(step === STEPS.GREETING || step === STEPS.CAMERA_PERMISSION || step === STEPS.STEADY_INSTRUCTION) && (
+                    <LiveGreeting
+                        step={step}
+                        voiceState={voiceState}
+                        onSkip={handleSkipToScan}
+                    />
+                )}
 
+                {/* Review */}
+                {step === STEPS.REVIEW && (
+                    <LiveReview
+                        onRetake={handleRetake}
+                        onConfirm={handleConfirm}
+                        onClose={handleClose}
+                    />
+                )}
 
-                    {step === STEPS.ANALYZING && (
-                        <div className="flex flex-col items-center gap-4 bg-black/60 p-8 rounded-3xl backdrop-blur-md">
-                            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-white font-medium text-xl">{t('live.analyzing')}</p>
-                        </div>
-                    )}
-                </div>
+                {/* Analyzing */}
+                {step === STEPS.ANALYZING && <LiveAnalyzing />}
 
-                {/* Result Card - Now Persistent Contextual Mode */}
+                {/* Result */}
                 {result && step === STEPS.RESULT && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 p-6 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-30 animate-in slide-in-from-bottom-full duration-500 border-t border-gray-100 dark:border-gray-800 flex flex-col max-h-[60vh]">
-                        {/* Header */}
-                        <div className="flex justify-between items-start mb-4 flex-shrink-0">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{result.name}</h2>
-                                <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold 
-                                    ${result.safety_level === 'Code Green' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                        result.safety_level === 'Code Red' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
-                                    {result.safety_level}
-                                </div>
-                            </div>
-                            <button onClick={resetFlow} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-green-100 dark:hover:bg-green-900 text-gray-600 dark:text-gray-300 hover:text-green-600 transition-colors pointer-events-auto">
-                                <RefreshCw size={24} />
-                            </button>
-                        </div>
-
-                        {/* Scrollable Content: Description + Conversation */}
-                        <div className="overflow-y-auto mb-4 custom-scrollbar flex-1">
-                            <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed mb-6">
-                                {result.description}
-                            </p>
-
-                            {/* Conversation History */}
-                            {conversation.length > 0 && (
-                                <div className="space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4">
-                                    {conversation.map((turn, idx) => (
-                                        <div key={idx} className="space-y-2">
-                                            {/* User Q */}
-                                            <div className="flex justify-end">
-                                                <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 px-4 py-2 rounded-2xl rounded-tr-none text-sm max-w-[80%]">
-                                                    {turn.question}
-                                                </div>
-                                            </div>
-                                            {/* AI A */}
-                                            {turn.answer ? (
-                                                <div className="flex justify-start">
-                                                    <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-2xl rounded-tl-none text-sm max-w-[90%]">
-                                                        {turn.answer}
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="flex justify-start">
-                                                    <div className="flex items-center gap-2 text-gray-500 text-xs">
-                                                        <Loader2 size={12} className="animate-spin" /> Thinking...
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Controls */}
-                        <div className="flex justify-between items-center pointer-events-auto pt-2 border-t border-gray-100 dark:border-gray-800">
-                            <div className="text-gray-400 text-xs">
-                                {voiceState === 'bot-speaking' && (
-                                    <span className="flex items-center gap-2 animate-pulse text-green-500">
-                                        <Volume2 size={12} /> Speaking...
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="flex gap-4 items-center">
-                                <button
-                                    onClick={() => speakResult(result.description)}
-                                    className="p-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                    title="Replay Analysis"
-                                >
-                                    <Volume2 size={20} />
-                                </button>
-
-                                <VoiceInput
-                                    onTranscript={handleVoiceQuery}
-                                    lang={currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-US'}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    <LiveResult
+                        result={result}
+                        onReset={resetFlow}
+                        conversation={conversation}
+                        voiceState={voiceState}
+                        onReplay={() => speakResult(result.description)}
+                        onVoiceQuery={handleVoiceQuery}
+                        language={currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-US'}
+                    />
                 )}
             </div>
         </div>

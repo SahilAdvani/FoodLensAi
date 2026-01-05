@@ -3,8 +3,8 @@ uvicorn
 python-multipart
 pillow
 pytesseract
-sentence-transformers[onnx]
-faiss-cpu
-openai
 python-dotenv
 supabase
+openai
+faiss-cpu
+sentence-transformers[onnx]

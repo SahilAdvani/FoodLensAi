@@ -1,9 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 
-export default function VoiceInput({ onTranscript, lang = 'en-US' }) {
+const VoiceInput = forwardRef(({ onTranscript, lang = 'en-US', onStateChange }, ref) => {
     const [isListening, setIsListening] = useState(false);
     const [recognition, setRecognition] = useState(null);
+
+    useImperativeHandle(ref, () => ({
+        start: () => {
+            if (recognition && !isListening) {
+                try {
+                    recognition.start();
+                    setIsListening(true);
+                } catch (e) {
+                    console.warn("Already started", e);
+                }
+            }
+        },
+        stop: () => {
+            if (recognition && isListening) {
+                recognition.stop();
+                setIsListening(false);
+            }
+        }
+    }));
+
+    useEffect(() => {
+        if (onStateChange) onStateChange(isListening);
+    }, [isListening, onStateChange]);
 
     useEffect(() => {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -39,9 +62,14 @@ export default function VoiceInput({ onTranscript, lang = 'en-US' }) {
 
         if (isListening) {
             recognition.stop();
+            setIsListening(false);
         } else {
-            recognition.start();
-            setIsListening(true);
+            try {
+                recognition.start();
+                setIsListening(true);
+            } catch (e) {
+                console.error(e);
+            }
         }
     };
 
@@ -51,12 +79,14 @@ export default function VoiceInput({ onTranscript, lang = 'en-US' }) {
         <button
             onClick={toggleListening}
             className={`p-3 rounded-full transition-all duration-300 ${isListening
-                    ? 'bg-red-500 text-white animate-pulse shadow-red-500/50 shadow-lg'
-                    : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                ? 'bg-red-500 text-white animate-pulse shadow-red-500/50 shadow-lg'
+                : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
                 }`}
             aria-label={isListening ? "Stop listening" : "Start listening"}
         >
             {isListening ? <MicOff size={24} /> : <Mic size={24} />}
         </button>
     );
-}
+});
+
+export default VoiceInput;

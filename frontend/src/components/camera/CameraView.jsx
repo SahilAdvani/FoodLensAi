@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Camera, Upload } from 'lucide-react';
 
-export default function CameraView({ onCapture, onReady, showCaptureButton, prompt, onFileUpload }) {
+export default function CameraView({ onCapture, onReady, showCaptureButton, prompt, onFileUpload, imageSrc }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -90,8 +90,10 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
         )
     }
 
+    const displayImage = imageSrc || capturedImage;
+
     return (
-        <div className="relative w-full h-[calc(100vh-8rem)] rounded-2xl overflow-hidden bg-black shadow-xl">
+        <div className="relative w-full h-[calc(100vh-8rem)] md:h-auto md:aspect-video rounded-2xl overflow-hidden bg-black shadow-xl">
             {/* Hidden Canvas for Capture */}
             <canvas ref={canvasRef} className="hidden" />
 
@@ -101,20 +103,20 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
                 autoPlay
                 playsInline
                 muted
-                className={`absolute inset-0 w-full h-full object-cover ${capturedImage ? 'hidden' : ''}`}
+                className={`absolute inset-0 w-full h-full object-cover ${displayImage ? 'hidden' : ''}`}
             />
 
             {/* Captured Image Overlay */}
-            {capturedImage && (
+            {displayImage && (
                 <img
-                    src={capturedImage}
+                    src={displayImage}
                     alt="Captured"
                     className="absolute inset-0 w-full h-full object-cover z-10"
                 />
             )}
 
             {/* Overlay UI */}
-            {showCaptureButton !== false && (
+            {showCaptureButton !== false && !displayImage && (
                 <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-6 z-20 pointer-events-none">
 
                     {/* File Upload Button (Left Side) */}
@@ -151,7 +153,7 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
             )}
 
             {/* Centered Prompt Text */}
-            {prompt && !capturedImage && (
+            {prompt && !displayImage && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                     <span className="bg-black/40 text-white px-6 py-2 rounded-full text-base font-medium backdrop-blur-md animate-pulse">
                         {prompt}
