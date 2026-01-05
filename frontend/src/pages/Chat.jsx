@@ -5,12 +5,15 @@ import { useTranslation } from 'react-i18next';
 import { addMessage, setLoading, clearCurrentChat } from '@/store/chatSlice';
 import VoiceInput from '@/components/chat/VoiceInput';
 import CameraView from '@/components/camera/CameraView';
-import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check, ArrowLeft, MessageSquare, Calendar } from 'lucide-react';
-import ReactMarkdown from "react-markdown";
+import { Send, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check, ArrowLeft } from 'lucide-react';
 import SEO from '@/components/SEO';
 import useLoader from "@/hooks/useLoader";
 import { useAuth } from "@/context/AuthContext";
-import { createSession, sendMessage, getChatHistory, analyzeImage, getUserSessions } from "@/services/api";
+import { createSession, sendMessage, getChatHistory, analyzeImage, getUserSessions, generateSessionTitle } from "@/services/api";
+
+// Subcomponents
+import MessageBubble from '@/components/chat/MessageBubble';
+import RecentChats from '@/components/chat/RecentChats';
 
 export default function Chat() {
   const dispatch = useDispatch();
@@ -59,8 +62,12 @@ export default function Chat() {
 
         // Load Recent Sessions
         if (user?.id) {
-          const sessions = await getUserSessions(user.id);
-          setRecentSessions(sessions.slice(0, 4)); // Top 4 recent
+          try {
+            const sessions = await getUserSessions(user.id);
+            setRecentSessions(sessions.slice(0, 4)); // Top 4 recent
+          } catch (e) {
+            console.error("Failed to load recent sessions", e);
+          }
         }
 
         const greeting = currentLanguage === 'hi-IN'
@@ -107,8 +114,12 @@ export default function Chat() {
       }
 
       const response = await sendMessage(currentSess, text, user?.id);
+      dispatch(addMessage({ role: 'ai', content: response.content, animate: true }));
 
-      dispatch(addMessage({ role: 'ai', content: response.content }));
+      // Generate Title for new chats (Fire & Forget)
+      if (currentChat.length < 2) {
+        generateSessionTitle(currentSess, text);
+      }
 
     } catch (error) {
       console.error("Send message failed", error);
@@ -195,7 +206,15 @@ export default function Chat() {
         responseText = "Analysis complete, but I couldn't get a specific explanation.";
       }
 
-      dispatch(addMessage({ role: 'ai', content: responseText }));
+      dispatch(addMessage({ role: 'ai', content: responseText, animate: true }));
+
+      // Generate Title for scan
+      if (currentChat.length < 2) {
+        const title = responseText.includes("**I found:**")
+          ? responseText.split("**I found:**")[1].split("**")[0].trim()
+          : "Food Analysis";
+        generateSessionTitle(currentSess, title);
+      }
 
     } catch (error) {
       console.error("Analysis failed", error);
@@ -224,7 +243,6 @@ export default function Chat() {
       {/* Camera Overlay */}
       {showCamera && (
         <div className="absolute inset-0 z-50 bg-black rounded-3xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
-          {/* Close Button (only when not in review mode or redundant if we have center close) */}
           {!reviewMode && (
             <div className="absolute top-4 right-4 z-50">
               <button onClick={handleClose} className="bg-black/50 p-2 rounded-full text-white">
@@ -249,7 +267,6 @@ export default function Chat() {
           {reviewMode && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
               <div className="flex gap-8 items-center animate-in zoom-in duration-300 pointer-events-auto mt-64">
-                {/* Left: Retake */}
                 <button
                   onClick={handleRetake}
                   className="w-16 h-16 rounded-full bg-gray-100/90 text-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
@@ -257,7 +274,6 @@ export default function Chat() {
                 >
                   <RefreshCw size={28} />
                 </button>
-                {/* Center: Close */}
                 <button
                   onClick={handleClose}
                   className="w-14 h-14 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
@@ -265,7 +281,6 @@ export default function Chat() {
                 >
                   <X size={28} />
                 </button>
-                {/* Right: Confirm */}
                 <button
                   onClick={handleConfirm}
                   className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform active:scale-95 ring-4 ring-white/30"
@@ -292,67 +307,16 @@ export default function Chat() {
         </div>
       )}
 
-      {/* Recent History (New Chat Only) */}
-      {!sessionId && recentSessions.length > 0 && (
-        <div className="mb-4 animate-in slide-in-from-top-4 duration-500">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 px-1">Recent Chats</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {recentSessions.map(session => (
-              <button
-                key={session.id}
-                onClick={() => navigate(`/chat/${session.id}`)}
-                className="flex items-start gap-3 p-3 text-left bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl hover:border-green-200 dark:hover:border-green-900 hover:shadow-sm transition-all group"
-              >
-                <div className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg group-hover:scale-110 transition-transform">
-                  <MessageSquare size={16} />
-                </div>
-                <div>
-                  <span className="block text-xs text-gray-400 mb-0.5 font-mono">
-                    {new Date(session.created_at).toLocaleDateString()}
-                  </span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200 line-clamp-1">
-                    Chat Session
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Recent History Component */}
+      {!sessionId && <RecentChats sessions={recentSessions} />}
 
       {/* Messages Area */}
       <div
         className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar"
         data-lenis-prevent
       >
-
         {currentChat.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
-          >
-            <div className={`p-2 rounded-full flex-shrink-0 ${msg.role === 'user' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
-              {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
-            </div>
-            <div className={`p-4 rounded-2xl max-w-[80%] text-sm leading-relaxed ${msg.role === 'user'
-              ? 'bg-green-600 text-white rounded-tr-none'
-              : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 rounded-tl-none shadow-sm'
-              }`}>
-              {msg.role === 'user' ? (
-                msg.content
-              ) : (
-                <div className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
-                  <ReactMarkdown
-                    components={{
-                      p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
-              )}
-            </div>
-          </div>
+          <MessageBubble key={idx} msg={msg} />
         ))}
 
         {isLoading && (

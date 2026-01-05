@@ -1,5 +1,20 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
+// Generate Session Title
+export const generateSessionTitle = async (sessionId, text) => {
+    try {
+        const response = await fetch(`${API_URL}/sessions/${sessionId}/title`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Failed to generate title", error);
+        return { title: "Chat Session" };
+    }
+};
+
 export const createSession = async (mode = "live", userId = null) => {
     try {
         const response = await fetch(`${API_URL}/session`, {

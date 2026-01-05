@@ -1,12 +1,40 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
 from typing import Optional
 from database import supabase
 import uuid
+from services.rag_engine import RAGEngine
 
 router = APIRouter()
+rag = RAGEngine()
 
 class CreateSessionRequest(BaseModel):
+    user_id: Optional[str] = None
+    mode: str = "live" # 'live' or 'chat'
+
+@router.patch("/sessions/{session_id}/title")
+async def update_session_title(session_id: str, text: str = Body(..., embed=True)):
+    """
+    Generate and update title for a session based on user text.
+    """
+    try:
+        title = rag.generate_title(text)
+        
+        # Update session in Supabase
+        # Note: 'title' column must exist in 'sessions' table
+        try:
+             supabase.table("sessions")\
+                .update({"title": title})\
+                .eq("id", session_id)\
+                .execute()
+        except:
+             # If column missing, ignore
+             pass
+
+        return {"title": title}
+    except Exception as e:
+        print(f"Failed to update title: {e}")
+        return {"title": "Chat Session"}
     user_id: Optional[str] = None
     mode: str = "live" # 'live' or 'chat'
 

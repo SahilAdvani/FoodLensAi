@@ -161,3 +161,32 @@ INSTRUCTIONS:
         )
 
         return response.choices[0].message.content.strip()
+
+    def generate_title(self, text: str) -> str:
+        """
+        Generate a short title for the chat session based on the first message.
+        """
+        prompt = f"""
+        Generate a short, concise title (max 5 words) for a chat that starts with: "{text}".
+        Do not use quotes. Just the title.
+        Examples:
+        - "Apple Nutrition Info"
+        - "Is E102 Safe?"
+        - "Banana Calories"
+        """
+
+        try:
+            response = self.client.chat.completions.create(
+                model="openai/gpt-4.1",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant. Keep it brief."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.5,
+                max_tokens=15,
+                timeout=10,
+            )
+            return response.choices[0].message.content.strip().replace('"', '')
+        except Exception as e:
+            print(f"Title generation failed: {e}")
+            return "Chat Session"
