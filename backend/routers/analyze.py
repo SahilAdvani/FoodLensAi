@@ -52,14 +52,41 @@ async def analyze_image(
              print(f"DEBUG: Analysis type: {type(result['analysis'])}")
              print(f"DEBUG: Analysis preview: {result['analysis'][:100]}...")
 
+        # Format the content into Markdown before saving
+        raw_analysis = result.get("analysis", "")
+        formatted_content = raw_analysis
+        
+        try:
+             # Clean potential markdown code blocks
+             clean_json = raw_analysis
+             if "```json" in clean_json:
+                 clean_json = clean_json.replace("```json", "").replace("```", "")
+             elif "```" in clean_json:
+                 clean_json = clean_json.replace("```", "")
+                 
+             parsed = json.loads(clean_json)
+             if "results" in parsed and isinstance(parsed["results"], list):
+                 formatted_content = ""
+                 for item in parsed["results"]:
+                     name = item.get('ingredient', 'Unknown')
+                     evidence = item.get('evidence', '')
+                     explanation = item.get('explanation', '')
+                     safety = '⚠️ Caution' if 'risk' in evidence.lower() or 'unsafe' in evidence.lower() else '✅ Safe'
+                     
+                     formatted_content += f"### {name} {safety}\n{explanation}\n\n"
+             else:
+                 formatted_content = result.get("message", "Analysis complete but no ingredients identified.")
+                 
+        except Exception as e:
+             # Fallback if parsing fails
+             print(f"JSON formatting failed: {e}")
+             formatted_content = raw_analysis
+
         # 3. Save Assistant Message
         assistant_message = {
              "session_id": session_id,
              "role": "assistant",
-             "content": json.dumps(result), # Store structured data or just description? Using description for now, or raw json? Schema says text.
-             # If schema is content text, better to store stringified JSON or just the main text. 
-             # Let's store the description + name for readability, or JSON if we want to re-parse.
-             # Given the frontend expects structured data, let's store JSON string.
+             "content": formatted_content, 
              "source": "analysis_result"
         }
         if user_id:

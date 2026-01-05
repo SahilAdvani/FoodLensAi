@@ -193,9 +193,12 @@ export default function Chat() {
 
         try {
           const parsed = JSON.parse(jsonString);
-          if (parsed.results && parsed.results.length > 0) {
-            const item = parsed.results[0];
-            responseText = `**I found:** ${item.ingredient}\n\n**Safety Level:** ${item.evidence?.toLowerCase().includes("risk") ? "⚠️ Caution" : "✅ Safe"}\n\n**Details:** ${item.explanation}`;
+          if (parsed.results && Array.isArray(parsed.results) && parsed.results.length > 0) {
+            responseText = parsed.results.map(item => {
+              const evidence = item.evidence || "";
+              const safety = (evidence.toLowerCase().includes("risk") || evidence.toLowerCase().includes("unsafe")) ? "⚠️ Caution" : "✅ Safe";
+              return `### ${item.ingredient} ${safety}\n${item.evidence ? `*Evidence: ${item.evidence}*\n` : ''}${item.explanation}`;
+            }).join('\n\n');
           } else {
             responseText = resultData.message || "I couldn't identify any clear ingredients in the image.";
           }
