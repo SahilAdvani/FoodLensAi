@@ -123,7 +123,7 @@ export default function Chat() {
 
     } catch (error) {
       console.error("Send message failed", error);
-      dispatch(addMessage({ role: 'ai', content: "Sorry, I'm having trouble connecting to the server." }));
+      dispatch(addMessage({ role: 'ai', content: t('chat.errorConnection') }));
     } finally {
       dispatch(setLoading(false));
     }
@@ -221,7 +221,7 @@ export default function Chat() {
 
     } catch (error) {
       console.error("Analysis failed", error);
-      dispatch(addMessage({ role: 'ai', content: "Sorry, I encountered an error analyzing the image." }));
+      dispatch(addMessage({ role: 'ai', content: t('chat.errorAnalysis') }));
     } finally {
       dispatch(setLoading(false));
       setCapturedImage(null);
@@ -262,7 +262,7 @@ export default function Chat() {
 
           {!reviewMode && (
             <div className="absolute bottom-10 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2 pointer-events-none">
-              Tap circle to scan
+              {t('chat.tapToScan')}
             </div>
           )}
 
@@ -303,7 +303,7 @@ export default function Chat() {
           <button
             onClick={() => navigate('/chat')}
             className="bg-white/80 dark:bg-gray-800/80 p-2 rounded-full shadow-sm backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Back to New Chat"
+            title={t('chat.back')}
           >
             <ArrowLeft size={20} />
           </button>
@@ -314,10 +314,7 @@ export default function Chat() {
       {!sessionId && <RecentChats sessions={recentSessions} />}
 
       {/* Messages Area */}
-      <div
-        className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar"
-        data-lenis-prevent
-      >
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar" data-lenis-prevent>
         {currentChat.map((msg, idx) => (
           <MessageBubble key={idx} msg={msg} />
         ))}
@@ -329,7 +326,7 @@ export default function Chat() {
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-tl-none shadow-sm flex items-center">
               <Loader2 size={16} className="animate-spin text-green-600" />
-              <span className="ml-2 text-gray-500 text-xs">{showCamera ? 'Waiting for photo...' : 'Thinking...'}</span>
+              <span className="ml-2 text-gray-500 text-xs">{showCamera ? t('chat.waitingPhoto') : t('chat.thinking')}</span>
             </div>
           </div>
         )}
@@ -341,7 +338,7 @@ export default function Chat() {
         <button
           onClick={() => setShowCamera(true)}
           className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          title="Upload or Scan Image"
+          title={t('chat.uploadScan')}
         >
           <CameraIcon size={20} />
         </button>

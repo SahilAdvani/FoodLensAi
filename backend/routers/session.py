@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from database import supabase
 import uuid
 from services.rag_engine import RAGEngine
@@ -11,6 +11,27 @@ rag = RAGEngine()
 class CreateSessionRequest(BaseModel):
     user_id: Optional[str] = None
     mode: str = "live" # 'live' or 'chat'
+
+class DeleteSessionsRequest(BaseModel):
+    session_ids: List[str]
+    user_id: str
+
+@router.delete("/sessions")
+async def delete_sessions(request: DeleteSessionsRequest):
+    """
+    Bulk delete sessions.
+    """
+    try:
+        # Delete sessions matching IDs and User ID (security)
+        response = supabase.table("sessions")\
+            .delete()\
+            .in_("id", request.session_ids)\
+            .eq("user_id", request.user_id)\
+            .execute()
+            
+        return {"success": True, "count": len(response.data)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.patch("/sessions/{session_id}/title")
 async def update_session_title(session_id: str, text: str = Body(..., embed=True)):

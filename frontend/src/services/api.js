@@ -112,3 +112,26 @@ export const getUserSessions = async (userId) => {
         return [];
     }
 };
+
+export const deleteSessions = async (sessionIds, userId) => {
+    try {
+        const response = await fetch(`${API_URL}/sessions`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                session_ids: sessionIds,
+                user_id: userId
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to delete sessions");
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error deleting sessions:", error);
+        throw error;
+    }
+};

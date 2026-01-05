@@ -1,15 +1,36 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const RecentChats = ({ sessions }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
-    if (!sessions || sessions.length === 0) return null;
+    if (!sessions || sessions.length === 0) {
+        return (
+            <div className="mb-4 animate-in slide-in-from-top-4 duration-500">
+                <div className="flex justify-between items-center mb-3 px-1">
+                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">{t('recent.header')}</h3>
+                    <button onClick={() => navigate('/history')} className="text-xs text-green-600 hover:text-green-700 font-medium transition-colors">
+                        {t('recent.viewAll')}
+                    </button>
+                </div>
+                <div className="text-center text-gray-400 text-xs py-4 bg-gray-50 dark:bg-gray-800/20 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+                    {t('recent.empty')}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="mb-4 animate-in slide-in-from-top-4 duration-500">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 px-1">Recent Chats</h3>
+            <div className="flex justify-between items-center mb-3 px-1">
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">{t('recent.header')}</h3>
+                <button onClick={() => navigate('/history')} className="text-xs text-green-600 hover:text-green-700 font-medium transition-colors">
+                    {t('recent.viewAll')}
+                </button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {sessions.map(session => (
                     <button
@@ -25,7 +46,7 @@ const RecentChats = ({ sessions }) => {
                                 {new Date(session.created_at).toLocaleDateString()}
                             </span>
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-200 line-clamp-1">
-                                {session.title || "Chat Session"}
+                                {session.title || t('history.chatSession')}
                             </span>
                         </div>
                     </button>
