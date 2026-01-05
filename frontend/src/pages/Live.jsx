@@ -5,12 +5,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addMessage } from '@/store/chatSlice';
 import CameraView from '@/components/camera/CameraView';
 import VoiceVisualizer from '@/components/live/VoiceVisualizer';
+import VoiceInput from "@/components/chat/VoiceInput";
 import { MOCK_INGREDIENTS } from '@/constants/mockData';
-import { Volume2, X, RefreshCw, Check } from 'lucide-react';
+import { Volume2, X, RefreshCw, Check, MessageSquare, Loader2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import useLoader from "@/hooks/useLoader";
 import { useAuth } from "@/context/AuthContext";
-import { createSession, analyzeImage } from "@/services/api";
+import { createSession, analyzeImage, sendMessage } from "@/services/api";
 
 const STEPS = {
     GREETING: 'greeting',
@@ -38,6 +39,10 @@ export default function Live() {
     const [sessionId, setSessionId] = useState(null);
     const [capturedImage, setCapturedImage] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    // Contextual Chat State
+    const [conversation, setConversation] = useState([]);
+    const [isResponding, setIsResponding] = useState(false);
 
     // Speak utility with Chat Sync & Visualizer State
     const speak = (text, onEnd) => {
@@ -117,10 +122,6 @@ export default function Live() {
 
 
     const handleCapture = (imageSrc) => {
-        // Assuming CameraView passes the base64 or blob.
-        // If it passes base64, we need to convert to Blob.
-        // Let's assume it passes a Blob or we can handle it.
-        // We'll store whatever it passes and verify CameraView later.
         setCapturedImage(imageSrc);
         setStep(STEPS.REVIEW);
     };
@@ -148,6 +149,7 @@ export default function Live() {
     const handleConfirm = async () => {
         setStep(STEPS.ANALYZING);
         setIsAnalyzing(true);
+        setConversation([]); // Clear previous conversation context for new scan
 
         try {
             // Ensure Session ID exists
@@ -245,9 +247,38 @@ export default function Live() {
         speak(text);
     };
 
+    const handleVoiceQuery = async (text) => {
+        if (!text || !sessionId) return;
+
+        setIsResponding(true);
+        // Add optimistic user message to conversation
+        setConversation(prev => [...prev, { question: text, answer: null }]);
+
+        try {
+            const response = await sendMessage(sessionId, text, user?.id);
+
+            // Update conversation with real answer
+            setConversation(prev => {
+                const newArr = [...prev];
+                newArr[newArr.length - 1].answer = response.content;
+                return newArr;
+            });
+
+            speak(response.content);
+
+        } catch (error) {
+            console.error("Voice query failed", error);
+            speak(t('chat.errorConnection'));
+            setConversation(prev => prev.slice(0, -1)); // Remove failed message
+        } finally {
+            setIsResponding(false);
+        }
+    };
+
     const resetFlow = () => {
         setResult(null);
         setCapturedImage(null);
+        setConversation([]);
         setStep(STEPS.STEADY_INSTRUCTION); // Go back to steady -> scan
     };
 
@@ -261,7 +292,7 @@ export default function Live() {
 
             {/* Camera Area */}
             <div className={`flex-1 relative rounded-3xl overflow-hidden bg-black shadow-2xl transition-all duration-500 
-                ${step === STEPS.RESULT ? 'h-1/2' : 'h-full'}`}>
+                ${step === STEPS.RESULT ? 'h-2/5' : 'h-full'}`}>
                 {!cameraActive && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
                         <p className="animate-pulse">{t('live.waiting')}</p>
@@ -275,6 +306,7 @@ export default function Live() {
                         showCaptureButton={step === STEPS.SCANNING}
                         prompt={step === STEPS.SCANNING ? t('live.steady') : null}
                         onFileUpload={handleFileUpload}
+                    // If logic to freeze on RESULT
                     />
                 )}
 
@@ -319,12 +351,13 @@ export default function Live() {
                     )}
                 </div>
 
-                {/* Result Card */}
+                {/* Result Card - Now Persistent Contextual Mode */}
                 {result && step === STEPS.RESULT && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 p-6 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-30 animate-in slide-in-from-bottom-full duration-500 border-t border-gray-100 dark:border-gray-800">
-                        <div className="flex justify-between items-start mb-4">
+                    <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 p-6 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-30 animate-in slide-in-from-bottom-full duration-500 border-t border-gray-100 dark:border-gray-800 flex flex-col max-h-[60vh]">
+                        {/* Header */}
+                        <div className="flex justify-between items-start mb-4 flex-shrink-0">
                             <div>
-                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{result.name}</h2>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{result.name}</h2>
                                 <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold 
                                     ${result.safety_level === 'Code Green' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                                         result.safety_level === 'Code Red' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
@@ -336,17 +369,67 @@ export default function Live() {
                             </button>
                         </div>
 
-                        <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed mb-6">
-                            {result.description}
-                        </p>
+                        {/* Scrollable Content: Description + Conversation */}
+                        <div className="overflow-y-auto mb-4 custom-scrollbar flex-1">
+                            <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed mb-6">
+                                {result.description}
+                            </p>
 
-                        <div className="flex justify-end gap-4 pointer-events-auto">
-                            <button
-                                onClick={() => speakResult(result)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <Volume2 size={20} /> Replay
-                            </button>
+                            {/* Conversation History */}
+                            {conversation.length > 0 && (
+                                <div className="space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+                                    {conversation.map((turn, idx) => (
+                                        <div key={idx} className="space-y-2">
+                                            {/* User Q */}
+                                            <div className="flex justify-end">
+                                                <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 px-4 py-2 rounded-2xl rounded-tr-none text-sm max-w-[80%]">
+                                                    {turn.question}
+                                                </div>
+                                            </div>
+                                            {/* AI A */}
+                                            {turn.answer ? (
+                                                <div className="flex justify-start">
+                                                    <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-2xl rounded-tl-none text-sm max-w-[90%]">
+                                                        {turn.answer}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex justify-start">
+                                                    <div className="flex items-center gap-2 text-gray-500 text-xs">
+                                                        <Loader2 size={12} className="animate-spin" /> Thinking...
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex justify-between items-center pointer-events-auto pt-2 border-t border-gray-100 dark:border-gray-800">
+                            <div className="text-gray-400 text-xs">
+                                {voiceState === 'bot-speaking' && (
+                                    <span className="flex items-center gap-2 animate-pulse text-green-500">
+                                        <Volume2 size={12} /> Speaking...
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="flex gap-4 items-center">
+                                <button
+                                    onClick={() => speakResult(result.description)}
+                                    className="p-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                    title="Replay Analysis"
+                                >
+                                    <Volume2 size={20} />
+                                </button>
+
+                                <VoiceInput
+                                    onTranscript={handleVoiceQuery}
+                                    lang={currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-US'}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
