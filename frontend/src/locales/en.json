@@ -43,6 +43,31 @@
         "placeholder": "Type your question...",
         "startPrompt": "Start asking about ingredients!",
         "user": "You",
-        "ai": "AI"
+        "ai": "AI",
+        "thinking": "Thinking...",
+        "waitingPhoto": "Waiting for photo...",
+        "errorConnection": "Sorry, I'm having trouble connecting to the server.",
+        "errorAnalysis": "Sorry, I encountered an error analyzing the image.",
+        "uploadScan": "Upload or Scan Image",
+        "tapToScan": "Tap circle to scan",
+        "back": "Back to New Chat"
+    },
+    "history": {
+        "title": "Chat History",
+        "delete": "Delete",
+        "searchPlaceholder": "Search chats...",
+        "emptyState": "No saved chats yet.",
+        "noResults": "No chats found matching your search.",
+        "startNew": "Start a New Chat",
+        "previous": "Previous",
+        "next": "Next",
+        "pageInfo": "Page {{current}} of {{total}}",
+        "loading": "Loading history...",
+        "chatSession": "Chat Session"
+    },
+    "recent": {
+        "header": "Recent Chats",
+        "viewAll": "View All",
+        "empty": "No recent conversations found"
     }
 }

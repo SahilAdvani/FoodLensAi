@@ -1,7 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const savedLanguage = localStorage.getItem('language');
+
 const initialState = {
-    currentLanguage: 'en-IN', // 'en-IN' or 'hi-IN'
+    currentLanguage: savedLanguage || 'en-IN', // 'en-IN' or 'hi-IN'
 };
 
 const languageSlice = createSlice({
@@ -10,9 +12,12 @@ const languageSlice = createSlice({
     reducers: {
         setLanguage: (state, action) => {
             state.currentLanguage = action.payload;
+            localStorage.setItem('language', action.payload);
         },
         toggleLanguage: (state) => {
-            state.currentLanguage = state.currentLanguage === 'en-IN' ? 'hi-IN' : 'en-IN';
+            const nextLang = state.currentLanguage === 'en-IN' ? 'hi-IN' : 'en-IN';
+            state.currentLanguage = nextLang;
+            localStorage.setItem('language', nextLang);
         },
     },
 });

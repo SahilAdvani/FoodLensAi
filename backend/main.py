@@ -1,13 +1,8 @@
 from fastapi import FastAPI
-from routers import scan, analyze
-from supabase import create_client
-import os
+from routers import scan, analyze, session, chat
 
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
 
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Food Lens AI",
@@ -15,8 +10,18 @@ app = FastAPI(
     version="0.1.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # For development, allow all. For prod, generic list.
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(scan.router)
 app.include_router(analyze.router)
+app.include_router(session.router)
+app.include_router(chat.router, prefix="/chat", tags=["chat"])
 
 
 @app.get("/")

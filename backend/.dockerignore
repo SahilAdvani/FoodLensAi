@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+
+# Git
+.git/
+.gitignore
+
+# Node / frontend junk
+node_modules/
+
+# ML / cache (VERY IMPORTANT)
+.cache/
+.cache/*
+.cache/huggingface/
+.cache/torch/
+.cache/sentence_transformers/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml

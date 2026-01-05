@@ -1,25 +1,83 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { addMessage, setLoading } from '@/store/chatSlice';
+import { addMessage, setLoading, clearCurrentChat } from '@/store/chatSlice';
 import VoiceInput from '@/components/chat/VoiceInput';
 import CameraView from '@/components/camera/CameraView';
-import { MOCK_INGREDIENTS } from '@/constants/mockData';
-import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check } from 'lucide-react';
-import ReactMarkdown from "react-markdown";
+import { Send, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check, ArrowLeft } from 'lucide-react';
 import SEO from '@/components/SEO';
 import useLoader from "@/hooks/useLoader";
+import { useAuth } from "@/context/AuthContext";
+import { createSession, sendMessage, getChatHistory, analyzeImage, getUserSessions, generateSessionTitle } from "@/services/api";
+
+// Subcomponents
+import MessageBubble from '@/components/chat/MessageBubble';
+import RecentChats from '@/components/chat/RecentChats';
 
 export default function Chat() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { sessionId: routeSessionId } = useParams();
+
   useLoader(true);
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  // Use route param as source of truth for ID if present
+  const [sessionId, setSessionId] = useState(routeSessionId || null);
+
+  // Redux & Local State
   const { currentChat, isLoading } = useSelector((state) => state.chat);
   const { currentLanguage } = useSelector((state) => state.language);
   const [inputStr, setInputStr] = useState('');
   const [showCamera, setShowCamera] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const [recentSessions, setRecentSessions] = useState([]);
+
+  // Initialize Session & Load History
+  useEffect(() => {
+    const initChat = async () => {
+      // If URL has ID, load it
+      if (routeSessionId) {
+        setSessionId(routeSessionId);
+        try {
+          dispatch(clearCurrentChat());
+          const history = await getChatHistory(routeSessionId);
+          if (history && history.length > 0) {
+            history.forEach(msg => {
+              dispatch(addMessage({ role: msg.role === 'assistant' ? 'ai' : 'user', content: msg.content }));
+            });
+          }
+        } catch (e) {
+          console.error("Failed to load history", e);
+        }
+      } else {
+        // No ID in URL -> New Session
+        setSessionId(null);
+        dispatch(clearCurrentChat());
+
+        // Load Recent Sessions
+        if (user?.id) {
+          try {
+            const sessions = await getUserSessions(user.id);
+            setRecentSessions(sessions.slice(0, 4)); // Top 4 recent
+          } catch (e) {
+            console.error("Failed to load recent sessions", e);
+          }
+        }
+
+        const greeting = currentLanguage === 'hi-IN'
+          ? "नमस्ते! क्या आप किसी सामग्री के बारे में जानना चाहते हैं?"
+          : "Hello! I am your AI nutritionist. Ask me anything about food ingredients.";
+        dispatch(addMessage({ role: 'ai', content: greeting }));
+      }
+    };
+    initChat();
+  }, [routeSessionId, user, dispatch, currentLanguage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,66 +87,145 @@ export default function Chat() {
     scrollToBottom();
   }, [currentChat, isLoading]);
 
-  // Initial Greeting
-  useEffect(() => {
-    if (currentChat.length === 0) {
-      const greeting = currentLanguage === 'hi-IN'
-        ? "नमस्ते! क्या आप किसी सामग्री के बारे में जानना चाहते हैं? 'स्कैन' टाइप करें या मुझसे पूछें।"
-        : "Hello! Want to check ingredients? Type 'scan' or ask me.";
-      dispatch(addMessage({ role: 'ai', content: greeting }));
-    }
-  }, [currentLanguage]);
-
-  const handleSendMessage = (text) => {
+  const handleSendMessage = async (text) => {
     if (!text.trim()) return;
 
-    // Add user message
+    // Auto-trigger Camera if keywords detected
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('upload') || lowerText.includes('image') || lowerText.includes('photo') || lowerText.includes('scan')) {
+      setShowCamera(true);
+      setInputStr('');
+      return;
+    }
+
+    // Add user message locally
     dispatch(addMessage({ role: 'user', content: text }));
     setInputStr('');
     dispatch(setLoading(true));
 
+    try {
+      // Ensure session
+      let currentSess = sessionId;
+      if (!currentSess) {
+        currentSess = await createSession("chat", user?.id);
+        setSessionId(currentSess);
+        // Persist session in URL without component reload
+        navigate(`/chat/${currentSess}`, { replace: true });
+      }
 
-    setTimeout(() => {
-      const aiPreText = currentLanguage === 'hi-IN'
-        ? "मैं मदद कर सकता हूँ। कृपया मुझे सामग्री दिखाएं।"
-        : "I can help with that. Please show me the ingredient.";
+      const response = await sendMessage(currentSess, text, user?.id);
+      dispatch(addMessage({ role: 'ai', content: response.content, animate: true }));
 
-      dispatch(addMessage({ role: 'ai', content: aiPreText }));
-      setShowCamera(true);
-      setReviewMode(false);
+      // Generate Title for new chats (Fire & Forget)
+      if (currentChat.length < 2) {
+        generateSessionTitle(currentSess, text);
+      }
+
+    } catch (error) {
+      console.error("Send message failed", error);
+      dispatch(addMessage({ role: 'ai', content: t('chat.errorConnection') }));
+    } finally {
       dispatch(setLoading(false));
-    }, 1000);
+    }
   };
 
-  const handleCapture = () => {
+  const handleCapture = (imageSrc) => {
+    setCapturedImage(imageSrc);
     setReviewMode(true);
+  };
+
+  const handleFileUpload = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCapturedImage(reader.result);
+      setReviewMode(true);
+      setShowCamera(true); // Ensure camera overlay is visible for review
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRetake = () => {
     setReviewMode(false);
+    setCapturedImage(null);
   };
 
   const handleClose = () => {
     setShowCamera(false);
     setReviewMode(false);
+    setCapturedImage(null);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setShowCamera(false);
     setReviewMode(false);
-    dispatch(setLoading(true)); // Analyzing state
+    dispatch(setLoading(true));
 
-    setTimeout(() => {
-      const randomIngredient = MOCK_INGREDIENTS[Math.floor(Math.random() * MOCK_INGREDIENTS.length)];
-      const desc = currentLanguage === 'hi-IN' ? randomIngredient.description : randomIngredient.description;
+    try {
+      let currentSess = sessionId;
+      if (!currentSess) {
+        currentSess = await createSession("chat", user?.id);
+        setSessionId(currentSess);
+        navigate(`/chat/${currentSess}`, { replace: true });
+      }
 
-      const resultText = currentLanguage === 'hi-IN'
-        ? `मुझे मिला: ${randomIngredient.name}. ${desc}`
-        : `I found: ${randomIngredient.name}. ${desc}`;
+      // Convert base64 to blob
+      let imageBlob = capturedImage;
+      if (typeof capturedImage === 'string' && capturedImage.startsWith('data:')) {
+        const res = await fetch(capturedImage);
+        imageBlob = await res.blob();
+      }
 
-      dispatch(addMessage({ role: 'ai', content: resultText }));
+      const data = await analyzeImage(imageBlob, currentSess, user?.id);
+      const resultData = data.data;
+
+      // Parse Analysis result
+      let responseText = "Use Markdown to display result."; // Fallback
+
+      if (resultData && resultData.analysis) {
+        let jsonString = resultData.analysis;
+        // Clean markdown
+        if (jsonString.includes('```json')) {
+          jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '');
+        } else if (jsonString.includes('```')) {
+          jsonString = jsonString.replace(/```/g, '');
+        }
+
+        try {
+          const parsed = JSON.parse(jsonString);
+          if (parsed.results && Array.isArray(parsed.results) && parsed.results.length > 0) {
+            responseText = parsed.results.map(item => {
+              const evidence = item.evidence || "";
+              const safety = (evidence.toLowerCase().includes("risk") || evidence.toLowerCase().includes("unsafe")) ? "⚠️ Caution" : "✅ Safe";
+              return `### ${item.ingredient} ${safety}\n${item.evidence ? `*Evidence: ${item.evidence}*\n` : ''}${item.explanation}`;
+            }).join('\n\n');
+          } else {
+            responseText = resultData.message || "I couldn't identify any clear ingredients in the image.";
+          }
+        } catch (e) {
+          responseText = resultData.analysis; // If not JSON, just show the raw text
+        }
+      } else {
+        responseText = "Analysis complete, but I couldn't get a specific explanation.";
+      }
+
+      dispatch(addMessage({ role: 'ai', content: responseText, animate: true }));
+
+      // Generate Title for scan
+      if (currentChat.length < 2) {
+        const title = responseText.includes("**I found:**")
+          ? responseText.split("**I found:**")[1].split("**")[0].trim()
+          : "Food Analysis";
+        generateSessionTitle(currentSess, title);
+      }
+
+    } catch (error) {
+      console.error("Analysis failed", error);
+      dispatch(addMessage({ role: 'ai', content: t('chat.errorAnalysis') }));
+    } finally {
       dispatch(setLoading(false));
-    }, 2000);
+      setCapturedImage(null);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -109,7 +246,6 @@ export default function Chat() {
       {/* Camera Overlay */}
       {showCamera && (
         <div className="absolute inset-0 z-50 bg-black rounded-3xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
-          {/* Close Button (only when not in review mode or redundant if we have center close) */}
           {!reviewMode && (
             <div className="absolute top-4 right-4 z-50">
               <button onClick={handleClose} className="bg-black/50 p-2 rounded-full text-white">
@@ -118,11 +254,15 @@ export default function Chat() {
             </div>
           )}
 
-          <CameraView onCapture={handleCapture} showCaptureButton={!reviewMode} />
+          <CameraView
+            onCapture={handleCapture}
+            showCaptureButton={!reviewMode}
+            onFileUpload={handleFileUpload}
+          />
 
           {!reviewMode && (
             <div className="absolute bottom-10 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2 pointer-events-none">
-              Tap circle to scan
+              {t('chat.tapToScan')}
             </div>
           )}
 
@@ -130,7 +270,6 @@ export default function Chat() {
           {reviewMode && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
               <div className="flex gap-8 items-center animate-in zoom-in duration-300 pointer-events-auto mt-64">
-                {/* Left: Retake */}
                 <button
                   onClick={handleRetake}
                   className="w-16 h-16 rounded-full bg-gray-100/90 text-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
@@ -138,7 +277,6 @@ export default function Chat() {
                 >
                   <RefreshCw size={28} />
                 </button>
-                {/* Center: Close */}
                 <button
                   onClick={handleClose}
                   className="w-14 h-14 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95 backdrop-blur-sm"
@@ -146,7 +284,6 @@ export default function Chat() {
                 >
                   <X size={28} />
                 </button>
-                {/* Right: Confirm */}
                 <button
                   onClick={handleConfirm}
                   className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform active:scale-95 ring-4 ring-white/30"
@@ -160,27 +297,26 @@ export default function Chat() {
         </div>
       )}
 
-      {/* Messages Area */}
-      <div
-        className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar"
-        data-lenis-prevent
-      >
-
-        {currentChat.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+      {/* Header / Top Navigation */}
+      {sessionId && (
+        <div className="absolute top-4 left-4 z-40">
+          <button
+            onClick={() => navigate('/chat')}
+            className="bg-white/80 dark:bg-gray-800/80 p-2 rounded-full shadow-sm backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title={t('chat.back')}
           >
-            <div className={`p-2 rounded-full flex-shrink-0 ${msg.role === 'user' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
-              {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
-            </div>
-            <div className={`p-4 rounded-2xl max-w-[80%] text-sm leading-relaxed ${msg.role === 'user'
-              ? 'bg-green-600 text-white rounded-tr-none'
-              : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 rounded-tl-none shadow-sm'
-              }`}>
-              {msg.content}
-            </div>
-          </div>
+            <ArrowLeft size={20} />
+          </button>
+        </div>
+      )}
+
+      {/* Recent History Component */}
+      {!sessionId && <RecentChats sessions={recentSessions} />}
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar" data-lenis-prevent>
+        {currentChat.map((msg, idx) => (
+          <MessageBubble key={idx} msg={msg} />
         ))}
 
         {isLoading && (
@@ -190,7 +326,7 @@ export default function Chat() {
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-tl-none shadow-sm flex items-center">
               <Loader2 size={16} className="animate-spin text-green-600" />
-              <span className="ml-2 text-gray-500 text-xs">{showCamera ? 'Waiting for photo...' : 'Thinking...'}</span>
+              <span className="ml-2 text-gray-500 text-xs">{showCamera ? t('chat.waitingPhoto') : t('chat.thinking')}</span>
             </div>
           </div>
         )}
@@ -199,6 +335,13 @@ export default function Chat() {
 
       {/* Input Area */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-sm p-2 flex items-center gap-2 sticky bottom-0">
+        <button
+          onClick={() => setShowCamera(true)}
+          className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title={t('chat.uploadScan')}
+        >
+          <CameraIcon size={20} />
+        </button>
         <VoiceInput onTranscript={(text) => setInputStr(text)} lang={currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-US'} />
 
         <input
