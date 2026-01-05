@@ -47,3 +47,53 @@ export const analyzeImage = async (imageBlob, sessionId, userId = null) => {
         throw error;
     }
 };
+
+export const sendMessage = async (sessionId, message, userId = null) => {
+    try {
+        const response = await fetch(`${API_URL}/chat/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                session_id: sessionId,
+                message: message,
+                user_id: userId
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Chat API error: ${response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error sending message:", error);
+        throw error;
+    }
+};
+
+export const getChatHistory = async (sessionId) => {
+    try {
+        const response = await fetch(`${API_URL}/chat/history/${sessionId}`);
+        if (!response.ok) {
+            throw new Error(`History API error: ${response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching history:", error);
+        return [];
+    }
+};
+
+export const getUserSessions = async (userId) => {
+    try {
+        const response = await fetch(`${API_URL}/sessions/${userId}`);
+        if (!response.ok) {
+            throw new Error(`Sessions API error: ${response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching sessions:", error);
+        return [];
+    }
+};

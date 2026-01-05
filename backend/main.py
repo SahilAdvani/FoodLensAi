@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import scan, analyze, session
+from routers import scan, analyze, session, chat
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +21,7 @@ app.add_middleware(
 app.include_router(scan.router)
 app.include_router(analyze.router)
 app.include_router(session.router)
+app.include_router(chat.router, prefix="/chat", tags=["chat"])
 
 
 @app.get("/")

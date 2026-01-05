@@ -1,25 +1,76 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { addMessage, setLoading } from '@/store/chatSlice';
+import { addMessage, setLoading, clearCurrentChat } from '@/store/chatSlice';
 import VoiceInput from '@/components/chat/VoiceInput';
 import CameraView from '@/components/camera/CameraView';
-import { MOCK_INGREDIENTS } from '@/constants/mockData';
-import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check } from 'lucide-react';
+import { Send, User, Bot, Loader2, Camera as CameraIcon, X, RefreshCw, Check, ArrowLeft, MessageSquare, Calendar } from 'lucide-react';
 import ReactMarkdown from "react-markdown";
 import SEO from '@/components/SEO';
 import useLoader from "@/hooks/useLoader";
+import { useAuth } from "@/context/AuthContext";
+import { createSession, sendMessage, getChatHistory, analyzeImage, getUserSessions } from "@/services/api";
 
 export default function Chat() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { sessionId: routeSessionId } = useParams();
+
   useLoader(true);
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  // Use route param as source of truth for ID if present
+  const [sessionId, setSessionId] = useState(routeSessionId || null);
+
+  // Redux & Local State
   const { currentChat, isLoading } = useSelector((state) => state.chat);
   const { currentLanguage } = useSelector((state) => state.language);
   const [inputStr, setInputStr] = useState('');
   const [showCamera, setShowCamera] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const [recentSessions, setRecentSessions] = useState([]);
+
+  // Initialize Session & Load History
+  useEffect(() => {
+    const initChat = async () => {
+      // If URL has ID, load it
+      if (routeSessionId) {
+        setSessionId(routeSessionId);
+        try {
+          dispatch(clearCurrentChat());
+          const history = await getChatHistory(routeSessionId);
+          if (history && history.length > 0) {
+            history.forEach(msg => {
+              dispatch(addMessage({ role: msg.role === 'assistant' ? 'ai' : 'user', content: msg.content }));
+            });
+          }
+        } catch (e) {
+          console.error("Failed to load history", e);
+        }
+      } else {
+        // No ID in URL -> New Session
+        setSessionId(null);
+        dispatch(clearCurrentChat());
+
+        // Load Recent Sessions
+        if (user?.id) {
+          const sessions = await getUserSessions(user.id);
+          setRecentSessions(sessions.slice(0, 4)); // Top 4 recent
+        }
+
+        const greeting = currentLanguage === 'hi-IN'
+          ? "नमस्ते! क्या आप किसी सामग्री के बारे में जानना चाहते हैं?"
+          : "Hello! I am your AI nutritionist. Ask me anything about food ingredients.";
+        dispatch(addMessage({ role: 'ai', content: greeting }));
+      }
+    };
+    initChat();
+  }, [routeSessionId, user, dispatch, currentLanguage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,66 +80,130 @@ export default function Chat() {
     scrollToBottom();
   }, [currentChat, isLoading]);
 
-  // Initial Greeting
-  useEffect(() => {
-    if (currentChat.length === 0) {
-      const greeting = currentLanguage === 'hi-IN'
-        ? "नमस्ते! क्या आप किसी सामग्री के बारे में जानना चाहते हैं? 'स्कैन' टाइप करें या मुझसे पूछें।"
-        : "Hello! Want to check ingredients? Type 'scan' or ask me.";
-      dispatch(addMessage({ role: 'ai', content: greeting }));
-    }
-  }, [currentLanguage]);
-
-  const handleSendMessage = (text) => {
+  const handleSendMessage = async (text) => {
     if (!text.trim()) return;
 
-    // Add user message
+    // Auto-trigger Camera if keywords detected
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('upload') || lowerText.includes('image') || lowerText.includes('photo') || lowerText.includes('scan')) {
+      setShowCamera(true);
+      setInputStr('');
+      return;
+    }
+
+    // Add user message locally
     dispatch(addMessage({ role: 'user', content: text }));
     setInputStr('');
     dispatch(setLoading(true));
 
+    try {
+      // Ensure session
+      let currentSess = sessionId;
+      if (!currentSess) {
+        currentSess = await createSession("chat", user?.id);
+        setSessionId(currentSess);
+        // Persist session in URL without component reload
+        navigate(`/chat/${currentSess}`, { replace: true });
+      }
 
-    setTimeout(() => {
-      const aiPreText = currentLanguage === 'hi-IN'
-        ? "मैं मदद कर सकता हूँ। कृपया मुझे सामग्री दिखाएं।"
-        : "I can help with that. Please show me the ingredient.";
+      const response = await sendMessage(currentSess, text, user?.id);
 
-      dispatch(addMessage({ role: 'ai', content: aiPreText }));
-      setShowCamera(true);
-      setReviewMode(false);
+      dispatch(addMessage({ role: 'ai', content: response.content }));
+
+    } catch (error) {
+      console.error("Send message failed", error);
+      dispatch(addMessage({ role: 'ai', content: "Sorry, I'm having trouble connecting to the server." }));
+    } finally {
       dispatch(setLoading(false));
-    }, 1000);
+    }
   };
 
-  const handleCapture = () => {
+  const handleCapture = (imageSrc) => {
+    setCapturedImage(imageSrc);
     setReviewMode(true);
+  };
+
+  const handleFileUpload = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCapturedImage(reader.result);
+      setReviewMode(true);
+      setShowCamera(true); // Ensure camera overlay is visible for review
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRetake = () => {
     setReviewMode(false);
+    setCapturedImage(null);
   };
 
   const handleClose = () => {
     setShowCamera(false);
     setReviewMode(false);
+    setCapturedImage(null);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setShowCamera(false);
     setReviewMode(false);
-    dispatch(setLoading(true)); // Analyzing state
+    dispatch(setLoading(true));
 
-    setTimeout(() => {
-      const randomIngredient = MOCK_INGREDIENTS[Math.floor(Math.random() * MOCK_INGREDIENTS.length)];
-      const desc = currentLanguage === 'hi-IN' ? randomIngredient.description : randomIngredient.description;
+    try {
+      let currentSess = sessionId;
+      if (!currentSess) {
+        currentSess = await createSession("chat", user?.id);
+        setSessionId(currentSess);
+        navigate(`/chat/${currentSess}`, { replace: true });
+      }
 
-      const resultText = currentLanguage === 'hi-IN'
-        ? `मुझे मिला: ${randomIngredient.name}. ${desc}`
-        : `I found: ${randomIngredient.name}. ${desc}`;
+      // Convert base64 to blob
+      let imageBlob = capturedImage;
+      if (typeof capturedImage === 'string' && capturedImage.startsWith('data:')) {
+        const res = await fetch(capturedImage);
+        imageBlob = await res.blob();
+      }
 
-      dispatch(addMessage({ role: 'ai', content: resultText }));
+      const data = await analyzeImage(imageBlob, currentSess, user?.id);
+      const resultData = data.data;
+
+      // Parse Analysis result
+      let responseText = "Use Markdown to display result."; // Fallback
+
+      if (resultData && resultData.analysis) {
+        let jsonString = resultData.analysis;
+        // Clean markdown
+        if (jsonString.includes('```json')) {
+          jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '');
+        } else if (jsonString.includes('```')) {
+          jsonString = jsonString.replace(/```/g, '');
+        }
+
+        try {
+          const parsed = JSON.parse(jsonString);
+          if (parsed.results && parsed.results.length > 0) {
+            const item = parsed.results[0];
+            responseText = `**I found:** ${item.ingredient}\n\n**Safety Level:** ${item.evidence?.toLowerCase().includes("risk") ? "⚠️ Caution" : "✅ Safe"}\n\n**Details:** ${item.explanation}`;
+          } else {
+            responseText = resultData.message || "I couldn't identify any clear ingredients in the image.";
+          }
+        } catch (e) {
+          responseText = resultData.analysis; // If not JSON, just show the raw text
+        }
+      } else {
+        responseText = "Analysis complete, but I couldn't get a specific explanation.";
+      }
+
+      dispatch(addMessage({ role: 'ai', content: responseText }));
+
+    } catch (error) {
+      console.error("Analysis failed", error);
+      dispatch(addMessage({ role: 'ai', content: "Sorry, I encountered an error analyzing the image." }));
+    } finally {
       dispatch(setLoading(false));
-    }, 2000);
+      setCapturedImage(null);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -118,7 +233,11 @@ export default function Chat() {
             </div>
           )}
 
-          <CameraView onCapture={handleCapture} showCaptureButton={!reviewMode} />
+          <CameraView
+            onCapture={handleCapture}
+            showCaptureButton={!reviewMode}
+            onFileUpload={handleFileUpload}
+          />
 
           {!reviewMode && (
             <div className="absolute bottom-10 left-0 right-0 text-center text-white font-medium bg-black/40 backdrop-blur-sm py-2 pointer-events-none">
@@ -160,6 +279,47 @@ export default function Chat() {
         </div>
       )}
 
+      {/* Header / Top Navigation */}
+      {sessionId && (
+        <div className="absolute top-4 left-4 z-40">
+          <button
+            onClick={() => navigate('/chat')}
+            className="bg-white/80 dark:bg-gray-800/80 p-2 rounded-full shadow-sm backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="Back to New Chat"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        </div>
+      )}
+
+      {/* Recent History (New Chat Only) */}
+      {!sessionId && recentSessions.length > 0 && (
+        <div className="mb-4 animate-in slide-in-from-top-4 duration-500">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 px-1">Recent Chats</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {recentSessions.map(session => (
+              <button
+                key={session.id}
+                onClick={() => navigate(`/chat/${session.id}`)}
+                className="flex items-start gap-3 p-3 text-left bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl hover:border-green-200 dark:hover:border-green-900 hover:shadow-sm transition-all group"
+              >
+                <div className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg group-hover:scale-110 transition-transform">
+                  <MessageSquare size={16} />
+                </div>
+                <div>
+                  <span className="block text-xs text-gray-400 mb-0.5 font-mono">
+                    {new Date(session.created_at).toLocaleDateString()}
+                  </span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200 line-clamp-1">
+                    Chat Session
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Messages Area */}
       <div
         className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar"
@@ -178,7 +338,19 @@ export default function Chat() {
               ? 'bg-green-600 text-white rounded-tr-none'
               : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 rounded-tl-none shadow-sm'
               }`}>
-              {msg.content}
+              {msg.role === 'user' ? (
+                msg.content
+              ) : (
+                <div className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
+                  <ReactMarkdown
+                    components={{
+                      p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -199,6 +371,13 @@ export default function Chat() {
 
       {/* Input Area */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-sm p-2 flex items-center gap-2 sticky bottom-0">
+        <button
+          onClick={() => setShowCamera(true)}
+          className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Upload or Scan Image"
+        >
+          <CameraIcon size={20} />
+        </button>
         <VoiceInput onTranscript={(text) => setInputStr(text)} lang={currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-US'} />
 
         <input

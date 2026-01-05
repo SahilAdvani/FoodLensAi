@@ -9,9 +9,9 @@ import Terms from "@/pages/Terms";
 import Live from "@/pages/Live";
 import Chat from "@/pages/Chat";
 import ChatHistory from "@/pages/ChatHistory";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import ForgotPassword from "@/pages/ForgotPassword";
+import Login from "@/pages/Auth/Login";
+import Register from "@/pages/Auth/Register";
+import ForgotPassword from "@/pages/Auth/ForgotPassword";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import Layout from "@/components/layout/Layout";
 
@@ -50,6 +50,7 @@ export default function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/live" element={<Live />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:sessionId" element={<Chat />} />
             <Route
               path="/chat/history"
               element={

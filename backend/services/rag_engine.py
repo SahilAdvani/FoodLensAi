@@ -108,3 +108,56 @@ CONTEXT:
         content = response.choices[0].message.content.strip()
         print(f"DEBUG: Raw RAG response:\n{content}")
         return content
+
+    def chat_completion(self, history: List[Dict], query: str) -> str:
+        """
+        Handle chat queries with history context.
+        """
+        # 1. Retrieve Knowledge based on current query
+        # We search specifically for the LAST user query to get relevant ingredients/facts
+        context_docs = self.vector_store.search(query, top_k=3)
+        
+        knowledge_text = "\n".join(
+            f"- {doc['ingredient']} ({doc['role']}): {doc['summary']}"
+            for doc in context_docs
+        )
+
+        # 2. Format History
+        # history is expected to be [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
+        # We take the last 5 turns to keep context window manageable
+        recent_history = history[-5:]
+        history_text = ""
+        for msg in recent_history:
+            role = "User" if msg["role"] == "user" else "Assistant"
+            history_text += f"{role}: {msg['content']}\n"
+
+        # 3. Construct Prompt
+        prompt = f"""
+You are FoodLens AI, a helpful nutrition assistant.
+
+KNOWLEDGE BASE (Scientific Facts):
+{knowledge_text}
+
+CONVERSATION HISTORY:
+{history_text}
+
+CURRENT QUESTION: {query}
+
+INSTRUCTIONS:
+- Answer the user's question using the KNOWLEDGE BASE.
+- Use CONVERSATION HISTORY to understand context (e.g., if user says "is it safe?", look at what we discussed previously).
+- If the answer isn't in the knowledge base, use general food safety knowledge but mention it's general advice.
+- Keep answers concise and helpful.
+"""
+
+        response = self.client.chat.completions.create(
+            model="openai/gpt-4.1",
+            messages=[
+                {"role": "system", "content": "You are a helpful nutrition assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.3, # Slightly higher for more natural conversation
+            timeout=30,
+        )
+
+        return response.choices[0].message.content.strip()

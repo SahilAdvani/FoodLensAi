@@ -29,3 +29,20 @@ async def create_session(request: CreateSessionRequest):
         return {"session_id": data.data[0]["id"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sessions/{user_id}")
+async def get_user_sessions(user_id: str):
+    """
+    Get all chat sessions for a user.
+    """
+    try:
+        response = supabase.table("sessions")\
+            .select("*")\
+            .eq("user_id", user_id)\
+            .eq("mode", "chat")\
+            .order("created_at", desc=True)\
+            .execute()
+        
+        return response.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
