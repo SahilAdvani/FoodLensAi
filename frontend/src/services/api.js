@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_URL = import.meta.env.DEV
+    ? "http://127.0.0.1:8000"
+    : import.meta.env.VITE_PROD_API_URL;
 
 // Generate Session Title
 export const generateSessionTitle = async (sessionId, text) => {
@@ -37,7 +39,7 @@ export const createSession = async (mode = "live", userId = null) => {
     }
 };
 
-export const analyzeImage = async (imageBlob, sessionId, userId = null) => {
+export const analyzeImage = async (imageBlob, sessionId, userId = null, language = 'en') => {
     try {
         const formData = new FormData();
         formData.append("image", imageBlob, "capture.jpg");
@@ -45,6 +47,7 @@ export const analyzeImage = async (imageBlob, sessionId, userId = null) => {
         if (userId) {
             formData.append("user_id", userId);
         }
+        formData.append("language", language);
 
         const response = await fetch(`${API_URL}/analyze`, {
             method: "POST",
