@@ -5,7 +5,6 @@ import { useSelector } from 'react-redux';
 export default function Layout({ children }) {
     const { mode } = useSelector((state) => state.theme);
 
-    // Apply dark mode class to html element
     React.useEffect(() => {
         const root = document.documentElement;
 

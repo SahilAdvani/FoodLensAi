@@ -1,9 +1,22 @@
 import React from 'react';
 import { RefreshCw, Check, X } from 'lucide-react';
 
-export default function LiveReview({ onRetake, onConfirm, onClose }) {
+export default function LiveReview({ image, onRetake, onConfirm, onClose }) {
     return (
-        <div className="absolute inset-0 pointer-events-none z-50">
+        <div className="absolute inset-0 z-50 flex flex-col items-center bg-black/90 backdrop-blur-sm">
+            {/* Image Preview */}
+            <div className="flex-1 w-full flex items-center justify-center p-6 pb-32">
+                {image && (
+                    <div className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-black">
+                        <img
+                            src={image}
+                            alt="Review"
+                            className="w-full h-full object-contain"
+                        />
+                    </div>
+                )}
+            </div>
+
             {/* Bottom Controls Container */}
             <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-10 pointer-events-auto animate-in slide-in-from-bottom-20 duration-300">
                 {/* Retake */}

@@ -10,14 +10,14 @@ rag = RAGEngine()
 
 class CreateSessionRequest(BaseModel):
     user_id: Optional[str] = None
-    mode: str = "live" # 'live' or 'chat'
+    mode: str = "live"
 
 class DeleteSessionsRequest(BaseModel):
     session_ids: List[str]
     user_id: str
 
 @router.delete("/sessions")
-async def delete_sessions(request: DeleteSessionsRequest):
+async def delete_sessions(request: DeleteSessionsRequest): 
     """
     Bulk delete sessions.
     """
@@ -28,7 +28,7 @@ async def delete_sessions(request: DeleteSessionsRequest):
             .in_("id", request.session_ids)\
             .eq("user_id", request.user_id)\
             .execute()
-            
+
         return {"success": True, "count": len(response.data)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -40,9 +40,9 @@ async def update_session_title(session_id: str, text: str = Body(..., embed=True
     """
     try:
         title = rag.generate_title(text)
-        
+
         # Update session in Supabase
-        # Note: 'title' column must exist in 'sessions' table
+
         try:
              supabase.table("sessions")\
                 .update({"title": title})\
@@ -56,21 +56,19 @@ async def update_session_title(session_id: str, text: str = Body(..., embed=True
     except Exception as e:
         print(f"Failed to update title: {e}")
         return {"title": "Chat Session"}
-    user_id: Optional[str] = None
-    mode: str = "live" # 'live' or 'chat'
 
 @router.post("/session")
-async def create_session(request: CreateSessionRequest):
+async def create_session(request: CreateSessionRequest):   
     try:
         session_data = {
             "mode": request.mode,
             "is_active": True
         }
         if request.user_id:
-            session_data["user_id"] = request.user_id
+            session_data["user_id"] = request.user_id      
 
         data = supabase.table("sessions").insert(session_data).execute()
-        
+
         # Check if data.data is not empty
         if not data.data:
              raise HTTPException(status_code=500, detail="Failed to create session")
@@ -91,7 +89,7 @@ async def get_user_sessions(user_id: str):
             .eq("mode", "chat")\
             .order("created_at", desc=True)\
             .execute()
-        
+
         return response.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

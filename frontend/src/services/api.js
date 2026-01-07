@@ -1,140 +1,149 @@
 const API_URL = import.meta.env.DEV
-    ? "http://127.0.0.1:8000"
+    ? 'http://localhost:8000'
     : import.meta.env.VITE_PROD_API_URL;
 
-// Generate Session Title
+/* ---------------- core helpers ---------------- */
+
+const DEFAULT_TIMEOUT = 30000;
+
+async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_TIMEOUT) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const res = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+        });
+        return res;
+    } finally {
+        clearTimeout(id);
+    }
+}
+
+async function fetchJSON(url, options) {
+    const res = await fetchWithTimeout(url, options);
+    if (!res.ok) {
+        let err;
+        try {
+            err = await res.json();
+        } catch {
+            err = { detail: res.statusText };
+        }
+        throw new Error(err.detail || 'Request failed');
+    }
+    return res.json();
+}
+
+async function fetchBlob(url, options) {
+    const res = await fetchWithTimeout(url, options);
+    if (!res.ok) {
+        throw new Error(`Request failed: ${res.statusText}`);
+    }
+    return res.blob();
+}
+
+/* ---------------- sessions ---------------- */
+
+export const createSession = async (mode = 'live', userId = null) => {
+    const data = await fetchJSON(`${API_URL}/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, user_id: userId }),
+    });
+    return data.session_id;
+};
+
 export const generateSessionTitle = async (sessionId, text) => {
     try {
-        const response = await fetch(`${API_URL}/sessions/${sessionId}/title`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error("Failed to generate title", error);
-        return { title: "Chat Session" };
+        return await fetchJSON(
+            `${API_URL}/sessions/${sessionId}/title`,
+            {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            }
+        );
+    } catch {
+        return { title: 'Chat Session' };
     }
 };
 
-export const createSession = async (mode = "live", userId = null) => {
-    try {
-        const response = await fetch(`${API_URL}/session`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ mode, user_id: userId }),
-        });
+export const getUserSessions = async userId =>
+    fetchJSON(`${API_URL}/sessions/${userId}`);
 
-        if (!response.ok) {
-            throw new Error("Failed to create session");
-        }
+export const deleteSessions = async (sessionIds, userId) =>
+    fetchJSON(`${API_URL}/sessions`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_ids: sessionIds, user_id: userId }),
+    });
 
-        const data = await response.json();
-        return data.session_id;
-    } catch (error) {
-        console.error("Error creating session:", error);
-        throw error;
+/* ---------------- vision ---------------- */
+
+export const analyzeImage = async (
+    imageBlob,
+    sessionId,
+    userId = null,
+    language = 'en'
+) => {
+    const form = new FormData();
+    form.append('image', imageBlob, 'capture.jpg');
+    form.append('session_id', sessionId);
+    if (userId) form.append('user_id', userId);
+    form.append('language', language);
+
+    const res = await fetchWithTimeout(`${API_URL}/analyze`, {
+        method: 'POST',
+        body: form,
+    }, 60000);
+
+    if (!res.ok) {
+        let err = {};
+        try {
+            err = await res.json();
+        } catch { }
+        throw new Error(err.detail || 'Analysis failed');
     }
+
+    return res.json();
 };
 
-export const analyzeImage = async (imageBlob, sessionId, userId = null, language = 'en') => {
+/* ---------------- chat ---------------- */
+
+export const sendMessage = async (
+    sessionId,
+    message,
+    userId = null
+) =>
+    fetchJSON(`${API_URL}/chat/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            session_id: sessionId,
+            message,
+            user_id: userId,
+        }),
+    });
+
+export const getChatHistory = async sessionId => {
     try {
-        const formData = new FormData();
-        formData.append("image", imageBlob, "capture.jpg");
-        formData.append("session_id", sessionId);
-        if (userId) {
-            formData.append("user_id", userId);
-        }
-        formData.append("language", language);
-
-        const response = await fetch(`${API_URL}/analyze`, {
-            method: "POST",
-            body: formData,
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || "Analysis failed");
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error("Error analyzing image:", error);
-        throw error;
-    }
-};
-
-export const sendMessage = async (sessionId, message, userId = null) => {
-    try {
-        const response = await fetch(`${API_URL}/chat/message`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                session_id: sessionId,
-                message: message,
-                user_id: userId
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Chat API error: ${response.statusText}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error("Error sending message:", error);
-        throw error;
-    }
-};
-
-export const getChatHistory = async (sessionId) => {
-    try {
-        const response = await fetch(`${API_URL}/chat/history/${sessionId}`);
-        if (!response.ok) {
-            throw new Error(`History API error: ${response.statusText}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching history:", error);
+        return await fetchJSON(
+            `${API_URL}/chat/history/${sessionId}`
+        );
+    } catch {
         return [];
     }
 };
 
-export const getUserSessions = async (userId) => {
-    try {
-        const response = await fetch(`${API_URL}/sessions/${userId}`);
-        if (!response.ok) {
-            throw new Error(`Sessions API error: ${response.statusText}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching sessions:", error);
-        return [];
-    }
-};
+/* ---------------- TTS ---------------- */
 
-export const deleteSessions = async (sessionIds, userId) => {
-    try {
-        const response = await fetch(`${API_URL}/sessions`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                session_ids: sessionIds,
-                user_id: userId
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to delete sessions");
-        }
-        return await response.json();
-    } catch (error) {
-        console.error("Error deleting sessions:", error);
-        throw error;
-    }
-};
+export const textToSpeech = async (
+    text,
+    voiceId = 'RABOvaPec1ymXz02oDQi'
+) =>
+    fetchBlob(`${API_URL}/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice_id: voiceId }),
+    });

@@ -3,7 +3,9 @@ from services.normalizer import normalize_ingredient
 
 COMMON_FOOD_WORDS = [
     "sugar", "salt", "flour", "oil", "milk", "egg", "butter",
-    "wheat", "cocoa", "starch", "syrup", "flavour", "flavor"
+    "wheat", "cocoa", "starch", "syrup", "flavour", "flavor",
+    "protein", "fat", "carbohydrate", "vitamin", "acid", "water", 
+    "corn", "soy", "nut", "fruit", "juice", "extract", "ghee", "masala"
 ]
 
 def looks_like_ingredients(text: str) -> bool:

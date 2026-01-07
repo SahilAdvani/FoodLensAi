@@ -10,7 +10,7 @@ export default function SEO({
     type = 'website'
 }) {
     const location = useLocation();
-    const siteUrl = 'https://foodlens.ai'; // Replace with actual domain when deployed
+    const siteUrl = 'https://foodlensai-henna.vercel.app';
     const fullUrl = `${siteUrl}${location.pathname}`;
     const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
     const siteTitle = 'FoodLens AI';

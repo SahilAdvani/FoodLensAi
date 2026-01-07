@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Camera, Upload } from 'lucide-react';
 
-export default function CameraView({ onCapture, onReady, showCaptureButton, prompt, onFileUpload, imageSrc }) {
+export default function CameraView({ isActive, onCapture, onReady, showCaptureButton, prompt, onFileUpload, imageSrc, className }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -10,7 +10,7 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
     const [capturedImage, setCapturedImage] = useState(null);
 
     useEffect(() => {
-        // If the capture button reappears (scanning mode), clear the frozen image
+
         if (showCaptureButton) {
             setCapturedImage(null);
         }
@@ -19,9 +19,13 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
     // ... (keep useEffect for startCamera unchanged)
 
     useEffect(() => {
+        let stream = null;
+
         const startCamera = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
+                if (!isActive) return;
+
+                stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'environment' }
                 });
                 if (videoRef.current) {
@@ -35,15 +39,21 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
             }
         };
 
-        startCamera();
-
-        return () => {
-            // Cleanup streams
+        if (isActive) {
+            startCamera();
+        } else {
             if (videoRef.current && videoRef.current.srcObject) {
                 videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                videoRef.current.srcObject = null;
+            }
+        }
+
+        return () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, []);
+    }, [isActive, onReady]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -93,20 +103,23 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
     const displayImage = imageSrc || capturedImage;
 
     return (
-        <div className="relative w-full h-[calc(100vh-8rem)] md:h-auto md:aspect-video rounded-2xl overflow-hidden bg-black shadow-xl">
-            {/* Hidden Canvas for Capture */}
+        <div
+            className={`relative bg-black overflow-hidden w-full h-full ${className || ''}`}
+        >
+            {/* Hidden Canvas */}
             <canvas ref={canvasRef} className="hidden" />
 
-            {/* Live Video - Keep mounted but hidden if image captured */}
+            {/* Live Video */}
             <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className={`absolute inset-0 w-full h-full object-cover ${displayImage ? 'hidden' : ''}`}
+                className={`absolute inset-0 w-full h-full object-cover ${displayImage ? 'hidden' : ''
+                    }`}
             />
 
-            {/* Captured Image Overlay */}
+            {/* Captured Image */}
             {displayImage && (
                 <img
                     src={displayImage}
@@ -115,11 +128,11 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
                 />
             )}
 
-            {/* Overlay UI */}
+            {/* Bottom Controls */}
             {showCaptureButton !== false && !displayImage && (
-                <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-6 z-20 pointer-events-none">
+                <div className="absolute bottom-6 sm:bottom-8 left-0 right-0 flex justify-center gap-6 z-20 pointer-events-none">
 
-                    {/* File Upload Button (Left Side) */}
+                    {/* Upload */}
                     {onFileUpload && (
                         <div className="pointer-events-auto">
                             <input
@@ -131,35 +144,38 @@ export default function CameraView({ onCapture, onReady, showCaptureButton, prom
                             />
                             <button
                                 onClick={handleUploadClick}
-                                className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/40 transition-colors"
+                                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full
+              bg-white/20 backdrop-blur-sm text-white
+              hover:bg-white/40 transition"
                             >
-                                <Upload size={24} />
+                                <Upload size={22} />
                             </button>
                         </div>
                     )}
 
-                    {/* Capture Button Ring */}
-                    <div className="p-1 rounded-full border-4 border-white/30 backdrop-blur-sm pointer-events-auto">
+                    {/* Capture */}
+                    <div className="p-1 rounded-full border-4 border-white/30 pointer-events-auto">
                         <button
                             onClick={handleCapture}
-                            className="w-16 h-16 rounded-full bg-white hover:bg-gray-100 active:scale-95 transition-all shadow-lg"
+                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full
+            bg-white hover:bg-gray-100 active:scale-95 shadow-lg"
                             aria-label="Capture"
                         />
                     </div>
 
-                    {/* Empty placeholder to balance spacing if needed, or keeping it centered */}
-                    {onFileUpload && <div className="w-12 h-12" />}
+                    {onFileUpload && <div className="w-11 h-11 sm:w-12 sm:h-12" />}
                 </div>
             )}
 
-            {/* Centered Prompt Text */}
+            {/* Prompt */}
             {prompt && !displayImage && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <span className="bg-black/40 text-white px-6 py-2 rounded-full text-base font-medium backdrop-blur-md animate-pulse">
+                    <span className="bg-black/40 text-white px-5 py-2 rounded-full text-sm sm:text-base backdrop-blur-md">
                         {prompt}
                     </span>
                 </div>
             )}
         </div>
     );
+
 }

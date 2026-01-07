@@ -27,18 +27,17 @@ async def chat_message(data: ChatMessage):
         }
         if data.user_id:
             user_msg["user_id"] = data.user_id
-            
+
         supabase.table("messages").insert(user_msg).execute()
 
-        # 2. Fetch History (last 10 messages for context)
-        # We need to fetch in reverse chronological order then reverse it back
+        # 2. Fetch History (last 10 messages for context)  
         history_response = supabase.table("messages")\
             .select("role, content")\
             .eq("session_id", data.session_id)\
             .order("created_at", desc=True)\
             .limit(10)\
             .execute()
-            
+
         # Convert to list and reverse to get chronological order [oldest ... newest]
         history = history_response.data[::-1] if history_response.data else []
 
@@ -54,7 +53,7 @@ async def chat_message(data: ChatMessage):
         }
         if data.user_id:
             ai_msg["user_id"] = data.user_id
-            
+
         supabase.table("messages").insert(ai_msg).execute()
 
         return {
@@ -79,7 +78,7 @@ async def get_chat_history(session_id: str):
             .eq("session_id", session_id)\
             .order("created_at", desc=False)\
             .execute()
-        
+
         return response.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -3,7 +3,7 @@ import { useState } from "react";
 
 export default function ChatInput({
   onSend,
-  disabled = false, 
+  disabled = false,
 }) {
   const [input, setInput] = useState("");
 

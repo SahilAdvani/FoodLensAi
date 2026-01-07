@@ -56,18 +56,22 @@ class FoodAnalysisPipeline:
             }
 
         # Step 4: Confidence scoring using vector store
-        scored_ingredients = []
-
-        for ing in cleaned:
-            try:
-                matches = self.rag.retrieve_context(ing, top_k=1)
-                if matches:
-                    scored_ingredients.append({
-                        "ingredient": ing,
-                        "score": matches[0]["similarity_score"]
-                    })
-            except Exception:
-                continue
+        # Step 4: Confidence scoring using vector store (BATCHED)
+        try:
+            scored_ingredients = []
+            
+            # Use top_k=1 for speed in initial filtering
+            results = self.rag.retrieve_context_batch(cleaned, top_k=1)
+            
+            for item in results:
+                scored_ingredients.append({
+                    "ingredient": item["ingredient"],
+                    "score": item["similarity_score"]
+                })
+        except Exception as e:
+            print(f"Batch scoring failed: {e}")
+            # Fallback to empty if batch fails
+            scored_ingredients = []
 
         if not scored_ingredients:
             return {
