@@ -1,8 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { MOCK_CHAT_HISTORY } from '@/constants/mockData';
 
 const initialState = {
-    history: MOCK_CHAT_HISTORY,
+    history: [],
     currentChat: [],
     isLoading: false,
 };
@@ -20,8 +19,11 @@ const chatSlice = createSlice({
         clearCurrentChat: (state) => {
             state.currentChat = [];
         },
+        setHistory: (state, action) => {
+            state.history = action.payload;
+        }
     },
 });
 
-export const { addMessage, setLoading, clearCurrentChat } = chatSlice.actions;
+export const { addMessage, setLoading, clearCurrentChat, setHistory } = chatSlice.actions;
 export default chatSlice.reducer;

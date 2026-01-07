@@ -10,7 +10,7 @@ export default function useLoader(initialLoading = false) {
             dispatch(showLoader());
             const timer = setTimeout(() => {
                 dispatch(hideLoader());
-            }, 800); // Default simulated loading time
+            }, 800);
             return () => clearTimeout(timer);
         }
     }, [initialLoading, dispatch]);

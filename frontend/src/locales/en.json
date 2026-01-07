@@ -50,7 +50,9 @@
         "errorAnalysis": "Sorry, I encountered an error analyzing the image.",
         "uploadScan": "Upload or Scan Image",
         "tapToScan": "Tap circle to scan",
-        "back": "Back to New Chat"
+        "back": "Back to New Chat",
+        "loginRequired": "Please login to start chatting.",
+        "loginToStart": "Login to Start"
     },
     "history": {
         "title": "Chat History",

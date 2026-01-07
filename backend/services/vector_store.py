@@ -1,9 +1,9 @@
 import faiss
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer      
 from typing import List, Dict
 
-from services.knowledge_loader import load_knowledge
+from services.knowledge_loader import load_knowledge       
 
 
 class VectorStore:
@@ -32,21 +32,34 @@ class VectorStore:
         self.index.add(embeddings)
 
     def search(self, query: str, top_k: int = 2) -> List[Dict]:
-        query_embedding = self.model.encode([query], convert_to_numpy=True)
-        faiss.normalize_L2(query_embedding)
+        return self.search_batch([query], top_k)[0]        
 
-        scores, indices = self.index.search(query_embedding, top_k)
+    def search_batch(self, queries: List[str], top_k: int = 2) -> List[List[Dict]]:
+        if not queries:
+            return []
 
-        results = []
-        for score, idx in zip(scores[0], indices[0]):
-            doc = self.documents[idx]
-            results.append({
-                "ingredient": doc["ingredient"],
-                "role": doc["role"],
-                "summary": doc["summary"],
-                "evidence": doc["evidence"],
-                "confidence_score": float(score)
-            })
+        # encode batch
+        query_embeddings = self.model.encode(queries, convert_to_numpy=True)
+        faiss.normalize_L2(query_embeddings)
 
-        return results
+        # search batch
+        # D: distances (scores), I: indices
+        scores, indices = self.index.search(query_embeddings, top_k)
+
+        all_results = []
+        for i in range(len(queries)):
+            query_results = []
+            for score, idx in zip(scores[i], indices[i]):  
+                if idx == -1: continue # Should not happen with IndexFlatIP unless empty
+                doc = self.documents[idx]
+                query_results.append({
+                    "ingredient": doc["ingredient"],       
+                    "role": doc["role"],
+                    "summary": doc["summary"],
+                    "evidence": doc["evidence"],
+                    "confidence_score": float(score)       
+                })
+            all_results.append(query_results)
+
+        return all_results
 

@@ -1,391 +1,311 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSelector, useDispatch } from 'react-redux';
-import { addMessage } from '@/store/chatSlice';
+import { useSelector, shallowEqual } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import QRCode from 'react-qr-code';
+import { Smartphone, X } from 'lucide-react';
+
 import CameraView from '@/components/camera/CameraView';
 import SEO from '@/components/SEO';
-import useLoader from "@/hooks/useLoader";
-import { useAuth } from "@/context/AuthContext";
-import { createSession, analyzeImage, sendMessage } from "@/services/api";
+import { useAuth } from '@/context/AuthContext';
+import { useLiveMode, STEPS } from '@/hooks/useLiveMode';
 
-// Subcomponents
 import LiveGreeting from '@/components/live/LiveGreeting';
 import LiveReview from '@/components/live/LiveReview';
 import LiveAnalyzing from '@/components/live/LiveAnalyzing';
 import LiveResult from '@/components/live/LiveResult';
-
-const STEPS = {
-    GREETING: 'greeting',
-    CAMERA_PERMISSION: 'camera_permission',
-    STEADY_INSTRUCTION: 'steady_instruction',
-    SCANNING: 'scanning',
-    REVIEW: 'review',
-    ANALYZING: 'analyzing',
-    RESULT: 'result'
-};
+import TapToStartOverlay from '@/components/live/TapToStartOverlay';
 
 export default function Live() {
-    const dispatch = useDispatch();
     const { t } = useTranslation();
-    const { currentLanguage } = useSelector((state) => state.language);
+    const navigate = useNavigate();
     const { user } = useAuth();
-    useLoader(true);
-    // States
-    const [step, setStep] = useState(STEPS.GREETING);
-    const [result, setResult] = useState(null);
-    const [cameraActive, setCameraActive] = useState(false);
-    const [voiceState, setVoiceState] = useState('idle'); // 'idle' | 'bot-speaking' | 'user-speaking'
 
-    // API State
-    const [sessionId, setSessionId] = useState(null);
-    const [capturedImage, setCapturedImage] = useState(null);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const { currentLanguage } = useSelector(
+        s => s.language,
+        shallowEqual
+    );
 
-    // Contextual Chat State
-    const [conversation, setConversation] = useState([]);
-    const [isResponding, setIsResponding] = useState(false);
+    const {
+        step,
+        setStep,
+        needsUserStart,
+        startLive,
 
-    // Robust Voice Loading
-    const [voicesLoaded, setVoicesLoaded] = useState(false);
+        result,
+        setResult,
+        cameraActive,
+        setCameraActive,
+        voiceState,
+        sessionId,
+        capturedImage,
+        setCapturedImage,
+        showQR,
+        setShowQR,
+        showExitModal,
+        conversation,
+        voiceInputRef,
+
+        handleInitSession,
+        handleCameraPermission,
+        handleCameraReady,
+        handleSteady,
+        handleCapture,
+        handleConfirm,
+        handleVoiceQuery,
+        handleRetake,
+        speak,
+        stopAudio,
+    } = useLiveMode();
+
+    /* ---------------- lifecycle ---------------- */
 
     useEffect(() => {
-        const loadVoices = () => {
-            const voices = window.speechSynthesis.getVoices();
-            if (voices.length > 0) setVoicesLoaded(true);
-        };
+        if (user?.id) handleInitSession(user.id);
+    }, [user?.id, handleInitSession]);
 
-        loadVoices();
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-        return () => { window.speechSynthesis.onvoiceschanged = null; };
+    useEffect(() => {
+        // Prevent accidental back gestures
+        const preventBack = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        window.history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', preventBack);
+        return () => window.removeEventListener('popstate', preventBack);
     }, []);
 
-    // Speak utility with Chat Sync & Visualizer State
-    const speak = (text, onEnd) => {
-        // Sync to Chat
-        dispatch(addMessage({ role: 'ai', content: text }));
-
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-
-        // Ensure voices are fresh
-        const voices = window.speechSynthesis.getVoices();
-        const isHindi = currentLanguage === 'hi-IN';
-
-        let voice = null;
-        if (isHindi) {
-            // Priority list for better Hindi voices
-            voice = voices.find(v => v.name.includes("Google हिन्दी") || v.name.includes("Google Hindi")) ||
-                voices.find(v => v.name.includes("Microsoft Hemant") || v.name.includes("Microsoft Kalpana")) ||
-                voices.find(v => v.lang.includes("hi-IN"));
-
-            utterance.rate = 0.9;
-        } else {
-            // Priority for English
-            voice = voices.find(v => v.lang.includes("en-IN") || v.lang.includes("en-US"));
-            utterance.rate = 1.0;
-        }
-
-        if (voice) {
-            utterance.voice = voice;
-            utterance.lang = voice.lang; // Explicitly set lang from voice
-        } else if (isHindi) {
-            utterance.lang = 'hi-IN'; // Fallback
-        }
-
-        utterance.onstart = () => setVoiceState('bot-speaking');
-        utterance.onend = () => {
-            setVoiceState('idle');
-            if (onEnd) onEnd();
-        };
-
-        window.speechSynthesis.speak(utterance);
-    };
-
-    // Step 1: Greeting on Mount + Session Creation
     useEffect(() => {
-        // Create Session
-        const initSession = async () => {
-            try {
-                const id = await createSession("live", user?.id);
-                setSessionId(id);
-            } catch (err) {
-                console.error("Failed to init session", err);
-            }
-        };
-        initSession();
+        if (step === STEPS.CAMERA_PERMISSION) handleCameraPermission();
+        if (step === STEPS.STEADY_INSTRUCTION) handleSteady();
+    }, [step, handleCameraPermission, handleSteady]);
 
-        // Small delay to ensure voices are loaded (browser quirk)
-        const timer = setTimeout(() => {
-            if (step === STEPS.GREETING) {
-                speak(t('live.greeting'), () => {
-                    setStep(STEPS.CAMERA_PERMISSION);
-                });
-            }
-        }, 1000);
-        return () => clearTimeout(timer);
-    }, [currentLanguage, user]);
+    /* ---------------- handlers ---------------- */
 
-    // Step 2: Camera Permission Instruction
-    useEffect(() => {
-        if (step === STEPS.CAMERA_PERMISSION) {
-            speak(t('live.turnOnCamera'), () => {
-                setCameraActive(true); // Trigger Camera View mount
-            });
-        }
-    }, [step]);
+    const handleReload = useCallback(() => {
+        window.location.reload();
+    }, []);
 
-    // Callback when camera is successfully active (from CameraView)
-    const handleCameraReady = () => {
-        setStep(STEPS.STEADY_INSTRUCTION);
-    };
+    const handleFileUpload = useCallback(
+        file => {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onloadend = () => handleCapture(reader.result);
+            reader.readAsDataURL(file);
+        },
+        [handleCapture]
+    );
 
-    // Step 3: Steady Instruction -> Auto Scanning
-    useEffect(() => {
-        if (step === STEPS.STEADY_INSTRUCTION) {
-            speak(t('live.keepSteady'), () => {
-                setStep(STEPS.SCANNING);
-            });
-        }
-    }, [step]);
+    const qrValue = useMemo(
+        () => `${window.location.origin}/mobile/connect?session=${user?.id}`,
+        [user?.id]
+    );
 
-    // Step 4: Scanning (Manual Capture now)
-    useEffect(() => {
-        if (step === STEPS.SCANNING) {
-            // Just wait for user to click capture using the CameraView button
-            setVoiceState('idle');
-        }
-    }, [step]);
+    const isGreetingStep =
+        step === STEPS.GREETING ||
+        step === STEPS.CAMERA_PERMISSION ||
+        step === STEPS.STEADY_INSTRUCTION;
 
-
-    const handleCapture = (imageSrc) => {
-        setCapturedImage(imageSrc);
-        setStep(STEPS.REVIEW);
-    };
-
-    const handleFileUpload = (file) => {
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setCapturedImage(reader.result); // Base64 string
-            setStep(STEPS.REVIEW);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleRetake = () => {
-        setStep(STEPS.SCANNING);
-    };
-
-    const handleClose = () => {
-        // Reset to initial state or steady
-        setStep(STEPS.STEADY_INSTRUCTION);
-        speak(t('live.steady'));
-    };
-
-    const handleConfirm = async () => {
-        setStep(STEPS.ANALYZING);
-        setIsAnalyzing(true);
-        setConversation([]); // Clear previous conversation context for new scan
-
-        try {
-            // Ensure Session ID exists
-            let currentSessionId = sessionId;
-            if (!currentSessionId) {
-                console.log("Session ID missing, attempting to create...");
-                try {
-                    currentSessionId = await createSession("live", user?.id);
-                    setSessionId(currentSessionId);
-                } catch (err) {
-                    console.error("Failed to recover session:", err);
-                    speak("Connection error. Please refresh and try again.");
-                    setStep(STEPS.STEADY_INSTRUCTION);
-                    setIsAnalyzing(false);
-                    return;
-                }
-            }
-
-            // Need to ensure capturedImage is a Blob
-            let imageBlob = capturedImage;
-
-            // If it's a base64 string (data:image...), convert to blob
-            if (typeof capturedImage === 'string' && capturedImage.startsWith('data:')) {
-                const res = await fetch(capturedImage);
-                imageBlob = await res.blob();
-            }
-
-            const data = await analyzeImage(imageBlob, currentSessionId, user?.id, currentLanguage);
-
-            const resultData = data.data; // API response object
-
-            let resultObj = null;
-
-            // correct handling for pipeline response structure
-            if (resultData && resultData.analysis) {
-                console.log("DEBUG: Raw analysis string:", resultData.analysis);
-                try {
-                    // Clean up markdown code blocks if present
-                    let jsonString = resultData.analysis;
-                    if (jsonString.includes('```json')) {
-                        jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '');
-                    } else if (jsonString.includes('```')) {
-                        jsonString = jsonString.replace(/```/g, '');
-                    }
-
-                    const parsedAnalysis = JSON.parse(jsonString);
-                    console.log("DEBUG: Parsed analysis:", parsedAnalysis);
-
-                    if (parsedAnalysis.results && parsedAnalysis.results.length > 0) {
-                        const firstItem = parsedAnalysis.results[0];
-                        resultObj = {
-                            name: firstItem.ingredient,
-                            description: firstItem.explanation,
-                            safety_level: firstItem.evidence && firstItem.evidence.toLowerCase().includes("risk") ? "Code Red" : "Code Green"
-                        };
-                    } else {
-                        console.warn("DEBUG: No results in parsed analysis");
-                    }
-                } catch (e) {
-                    console.error("Failed to parse analysis JSON. Raw string:", resultData.analysis, "Error:", e);
-                }
-            } else {
-                console.log("DEBUG: No analysis field in resultData", resultData);
-            }
-
-            // Fallback if parsing failed or no results
-            if (!resultObj) {
-                const isNoData = resultData.ingredients && resultData.ingredients.length === 0;
-
-                resultObj = {
-                    name: isNoData ? "No Ingredients Detected" : "Scan Complete",
-                    description: resultData.message || resultData.raw_text || "No ingredients identified. Please ensure the image is clear and contains readable text.",
-                    safety_level: "Info"
-                };
-            }
-
-            setResult(resultObj);
-
-            const desc = resultObj.description;
-            const text = `${t('live.resultPrefix')} ${resultObj.name}. ${desc}`;
-
-            setStep(STEPS.RESULT);
-            speakResult(text);
-
-        } catch (error) {
-            console.error(error);
-            speak("Sorry, I couldn't analyze that properly. Please try again.");
-            setStep(STEPS.STEADY_INSTRUCTION);
-        } finally {
-            setIsAnalyzing(false);
-        }
-    };
-
-    const speakResult = (text) => {
-        speak(text);
-    };
-
-    const handleVoiceQuery = async (text) => {
-        if (!text || !sessionId) return;
-
-        setIsResponding(true);
-        // Add optimistic user message to conversation
-        setConversation(prev => [...prev, { question: text, answer: null }]);
-
-        try {
-            const response = await sendMessage(sessionId, text, user?.id);
-
-            // Update conversation with real answer
-            setConversation(prev => {
-                const newArr = [...prev];
-                newArr[newArr.length - 1].answer = response.content;
-                return newArr;
-            });
-
-            speak(response.content);
-
-        } catch (error) {
-            console.error("Voice query failed", error);
-            speak(t('chat.errorConnection'));
-            setConversation(prev => prev.slice(0, -1)); // Remove failed message
-        } finally {
-            setIsResponding(false);
-        }
-    };
-
-    const handleSkipToScan = () => {
-        window.speechSynthesis.cancel();
-        setVoiceState('idle');
-        setStep(STEPS.SCANNING);
-        setCameraActive(true); // Ensure camera is on
-    };
-
-    const resetFlow = () => {
-        setResult(null);
-        setCapturedImage(null);
-        setConversation([]);
-        setStep(STEPS.STEADY_INSTRUCTION); // Go back to steady -> scan
-    };
+    /* ---------------- render ---------------- */
 
     return (
-        <div className="min-h-[calc(100vh-4rem)] flex flex-col p-4 bg-gray-50 dark:bg-gray-950">
+        <div className="min-h-[calc(100vh-4rem)]  flex flex-col p-4 bg-gray-50 dark:bg-gray-950 relative">
             <SEO
                 title="Live Scan"
-                description="Real-time food ingredient scanning. Point your camera at any food package to get instant health insights."
-                keywords="live scan, food camera, ingredient reader, real-time analysis"
+                description="Real-time food ingredient scanning."
             />
 
-            {/* Camera Area */}
-            <div className={`flex-1 md:flex-none w-full max-w-4xl mx-auto relative rounded-3xl overflow-hidden bg-black shadow-2xl transition-all duration-500 
-                ${step === STEPS.RESULT ? 'h-2/5 md:h-[40vh]' : 'h-full md:h-auto'}`}>
+            {/* TAP TO START (CRITICAL) */}
+            {needsUserStart && step === STEPS.GREETING && (
+                <TapToStartOverlay onStart={startLive} />
+            )}
 
-                {/* Camera View - Always mounted if active, handles its own visibility via imageSrc */}
-                {cameraActive && (
-                    <CameraView
-                        onCapture={handleCapture}
-                        onReady={handleCameraReady}
-                        showCaptureButton={step === STEPS.SCANNING}
-                        prompt={step === STEPS.SCANNING ? t('live.steady') : null}
-                        onFileUpload={handleFileUpload}
-                        imageSrc={capturedImage}
-                    />
+            {/* EXIT MODAL */}
+            {showExitModal && (
+                <ExitModal
+                    onCancel={() => setShowExitModal(false)}
+                    onConfirm={handleReload}
+                    language={currentLanguage}
+                />
+            )}
+
+            {/* QR MODAL */}
+            {showQR && (
+                <QRModal
+                    qrValue={qrValue}
+                    onClose={() => setShowQR(false)}
+                />
+            )}
+
+            {/* TOP BAR / CAMERA / CONTENT */}
+            <div className="flex-1 relative rounded-3xl overflow-hidden shadow-2xl bg-black max-w-lg mx-auto w-full border border-gray-800">
+
+                {/* Close Button */}
+                <CloseButton onClick={() => navigate('/')} />
+
+                {/* Mobile Connect Button */}
+                {(step === STEPS.GREETING || step === STEPS.SCANNING) && (
+                    <ConnectMobile onClick={() => setShowQR(true)} />
                 )}
 
-                {/* Subcomponents for each step */}
-
-                {/* Greeting / Instructions */}
+                {/* Greeting / Intro */}
                 {(step === STEPS.GREETING || step === STEPS.CAMERA_PERMISSION || step === STEPS.STEADY_INSTRUCTION) && (
-                    <LiveGreeting
-                        step={step}
-                        voiceState={voiceState}
-                        onSkip={handleSkipToScan}
-                    />
+                    <div className="absolute inset-0 z-20">
+                        <LiveGreeting
+                            onSkip={() => {
+                                if (step === STEPS.GREETING) {
+                                    setStep(STEPS.CAMERA_PERMISSION);
+                                } else if (step === STEPS.CAMERA_PERMISSION) {
+                                    stopAudio();
+                                    setCameraActive(true);
+                                }
+                            }}
+                            language={currentLanguage}
+                            voiceState={voiceState}
+                            step={step}
+                        />
+                    </div>
                 )}
 
-                {/* Review */}
+                {/* Camera View */}
+                <div className={`absolute inset-0 transition-opacity duration-500 ${step === STEPS.GREETING ? 'opacity-0' : 'opacity-100'}`}>
+                    <CameraView
+                        isActive={cameraActive}
+                        onReady={handleCameraReady}
+                        onCapture={handleCapture}
+
+                        onFileUpload={handleFileUpload}
+                        showCaptureButton={step === STEPS.SCANNING || step === STEPS.STEADY_INSTRUCTION}
+                        imageSrc={capturedImage}
+                        step={step}
+                        className="w-full h-full"
+                    />
+                </div>
+
+                {/* Step Overlays */}
                 {step === STEPS.REVIEW && (
                     <LiveReview
+                        image={capturedImage}
                         onRetake={handleRetake}
-                        onConfirm={handleConfirm}
-                        onClose={handleClose}
+                        onConfirm={() => handleConfirm(user?.id)}
                     />
                 )}
 
-                {/* Analyzing */}
                 {step === STEPS.ANALYZING && <LiveAnalyzing />}
 
-                {/* Result */}
-                {result && step === STEPS.RESULT && (
+                {step === STEPS.RESULT && result && (
                     <LiveResult
                         result={result}
-                        onReset={resetFlow}
                         conversation={conversation}
                         voiceState={voiceState}
-                        onReplay={() => speakResult(result.description)}
-                        onVoiceQuery={handleVoiceQuery}
-                        language={currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-US'}
+                        language={
+                            currentLanguage === 'hi-IN' ? 'hi-IN' : 'en-US'
+                        }
+                        voiceInputRef={voiceInputRef}
+                        onReplay={() => speak(result.description)}
+                        onStopSpeaking={stopAudio}
+                        onVoiceQuery={txt =>
+                            handleVoiceQuery(txt, user?.id)
+                        }
+                        onReset={() => {
+                            setResult(null);
+                            setCapturedImage(null);
+                            handleRetake();
+                        }}
                     />
                 )}
             </div>
         </div>
     );
 }
+
+/* ---------------- memoized helpers ---------------- */
+
+const CloseButton = React.memo(({ onClick }) => (
+    <div className="absolute top-4 right-4 z-30">
+        <button
+            onClick={onClick}
+            className="p-2 bg-black/40 rounded-full text-white hover:bg-black/60 border border-white/10"
+        >
+            <X size={24} />
+        </button>
+    </div>
+));
+
+const ConnectMobile = React.memo(({ onClick }) => (
+    <div className="absolute top-6 left-6 z-20 hidden md:block">
+        <button
+            onClick={onClick}
+            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm"
+        >
+            <Smartphone size={16} /> Connect Mobile
+        </button>
+    </div>
+));
+
+const QRModal = ({ qrValue, onClose }) => (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-w-sm w-full relative shadow-2xl">
+            <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            >
+                <X size={24} />
+            </button>
+            <h3 className="text-xl font-bold mb-6 text-center text-gray-900 dark:text-white">
+                Scan to Open on Mobile
+            </h3>
+            <div className="bg-white p-4 rounded-xl shadow-inner mx-auto max-w-fit">
+                <QRCode value={qrValue} size={200} />
+            </div>
+            <p className="text-center text-gray-500 mt-6 text-sm">
+                Point your phone's camera at this QR code to continue on your mobile device.
+            </p>
+        </div>
+    </div>
+);
+
+const ExitModal = ({ onCancel, onConfirm, language }) => {
+    const navigate = useNavigate();
+    const isHindi = language === 'hi-IN';
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-gray-900 w-full sm:w-auto sm:min-w-[320px] rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-10 duration-500">
+                <div className="text-center mb-6">
+                    <div className="w-16 h-1 bg-gray-200 rounded-full mx-auto mb-6 sm:hidden" />
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        {isHindi ? 'धन्यवाद! 🙏' : 'Thank You! 🙏'}
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                        {isHindi ? 'आप क्या करना चाहेंगे?' : 'What would you like to do next?'}
+                    </p>
+                </div>
+
+                <div className="space-y-3">
+                    <button
+                        onClick={onConfirm}
+                        className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-lg shadow-green-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                        {isHindi ? 'फिर से स्कैन करें' : 'Start New Scan'}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/')}
+                        className="w-full py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl font-semibold active:scale-95 transition-all"
+                    >
+                        {isHindi ? 'होम पर जाएं' : 'Back to Home'}
+                    </button>
+
+                    <button
+                        onClick={onCancel}
+                        className="w-full py-2 text-gray-400 text-sm hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                        {isHindi ? 'यहीं रहें' : 'Stay Here'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};

@@ -8,3 +8,5 @@ supabase
 openai
 faiss-cpu
 sentence-transformers[onnx]
+elevenlabs
+edge-tts

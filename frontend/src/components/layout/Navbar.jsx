@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { toggleLanguage } from '@/store/languageSlice';
 import { setTheme } from '@/store/themeSlice';
-import { Sun, Moon, Monitor, Languages, Camera, MessageSquare, ChevronDown, Menu, X, Download, Info, Mail, Shield, FileText, User, LogOut } from 'lucide-react';
+import { Sun, Moon, Monitor, Languages, Camera, MessageSquare, ChevronDown, Menu, X, Download, Info, Mail, Shield, FileText, User, LogOut, History } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import logo from '@/assets/logo_minimal.png';
 
@@ -92,6 +92,11 @@ export default function Navbar() {
                         <Link to="/chat" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2 font-medium">
                             <MessageSquare size={20} /> {t('navbar.chat')}
                         </Link>
+                        {user && (
+                            <Link to="/chat/history" className="text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2 font-medium">
+                                <History size={20} /> History
+                            </Link>
+                        )}
                     </div>
 
                     {/* RIGHT (Desktop): Actions + More Dropdown */}
@@ -224,6 +229,7 @@ export default function Navbar() {
                             <div className="grid grid-cols-2 gap-4">
                                 <MobileLink to="/live" icon={Camera} label={t('navbar.live')} onClick={() => setIsMobileMenuOpen(false)} />
                                 <MobileLink to="/chat" icon={MessageSquare} label={t('navbar.chat')} onClick={() => setIsMobileMenuOpen(false)} />
+                                {user && <MobileLink to="/chat/history" icon={History} label="History" onClick={() => setIsMobileMenuOpen(false)} />}
                             </div>
 
                             <hr className="border-gray-100 dark:border-gray-800" />

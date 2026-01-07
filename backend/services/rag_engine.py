@@ -41,6 +41,26 @@ class RAGEngine:
             for doc in results
         ]
 
+    def retrieve_context_batch(self, ingredients: List[str], top_k: int = 1) -> List[Dict]:
+        """
+        Batch retrieve context for multiple ingredients.
+        Returns a flat list of best matches for scoring.
+        """
+        batch_results = self.vector_store.search_batch(ingredients, top_k=top_k)
+        
+        flat_results = []
+        for i, results in enumerate(batch_results):
+            if results:
+                # Take the top match for each ingredient
+                doc = results[0]
+                flat_results.append({
+                    "ingredient": ingredients[i], # Use original name
+                    "role": doc["role"],
+                    "evidence": doc["evidence"],
+                    "similarity_score": round(doc["confidence_score"], 2)
+                })
+        return flat_results
+
     def explain_ingredients_batch(self, ingredients: List[str], language: str = "en") -> Dict:
         """
         Explain multiple ingredients in ONE call, but with strict separation.
@@ -68,8 +88,9 @@ class RAGEngine:
         full_context = "\n\n".join(ingredient_sections)
 
         lang_instruction = ""
-        if "hi" in language.lower():
-            lang_instruction = "IMPORTANT: Write the 'explanation' and 'role' field values in Hindi/Hinglish. Keep the 'ingredient' name in English or transliterated Hindi. Keep JSON keys standard English."
+        if "hi" in language.lower() or "hindi" in language.lower():
+            # Explicitly ask for Devanagari + simple Hinglish style for natural speech
+            lang_instruction = "IMPORTANT: Write the 'explanation' and 'role' field values in clear Hindi (Devanagari script) mixed with common English terms (Hinglish style) for natural conversation. e.g. 'Ye ingredient safe hai'. Keep 'ingredient' name in English."
 
         prompt = f"""
 You are a food safety assistant.
@@ -93,7 +114,7 @@ RETURN STRICT JSON ONLY in this format:
       "ingredient": "<name>",
       "role": "<role>",
       "evidence": "<evidence>",
-      "explanation": "<short explanation in simple words>"
+      "explanation": "<short explanation in simple words, optimized for speech>"
     }}
   ]
 }}
@@ -103,7 +124,7 @@ CONTEXT:
 """
 
         response = self.client.chat.completions.create(
-            model="openai/gpt-4.1",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a strict, grounded AI. Obey the rules exactly."},
                 {"role": "user", "content": prompt},
@@ -154,14 +175,15 @@ INSTRUCTIONS:
 - Answer the user's question using the KNOWLEDGE BASE.
 - Explain complex terms in very simple words (like explaining to a non-expert).
 - Focus on awareness/health impact.
-- Use CONVERSATION HISTORY to understand context (e.g., if user says "is it safe?", look at what we discussed previously).
+- Use CONVERSATION HISTORY to understand context.
 - If the answer isn't in the knowledge base, use general food safety knowledge but mention it's general advice.
 - Keep answers concise and helpful.
-- END WITH A SUGGESTION: "Do you want to know more about [related ingredient]?" or similar.
+- DETECT LANGUAGE: If the user asks in Hindi, answer in Hindi (Devanagari).
+- END WITH A SUGGESTION.
 """
 
         response = self.client.chat.completions.create(
-            model="openai/gpt-4.1",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a helpful nutrition assistant."},
                 {"role": "user", "content": prompt},

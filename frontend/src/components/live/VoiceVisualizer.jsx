@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 export default function VoiceVisualizer({ state }) {
-    // state: 'idle' | 'user-speaking' | 'bot-speaking'
+
 
     const variants = {
         idle: {
@@ -36,9 +36,9 @@ export default function VoiceVisualizer({ state }) {
     };
 
     const gradientColors = {
-        idle: "from-green-400/60 to-emerald-600/60",
-        'bot-speaking': "from-blue-400/80 to-indigo-600/80", // Distinct color for Bot
-        'user-speaking': "from-orange-400/80 to-red-500/80" // Distinct color for User
+        idle: "from-slate-400/60 to-gray-600/60",
+        'bot-speaking': "from-cyan-400/80 to-blue-600/80",
+        'user-speaking': "from-emerald-400/80 to-green-600/80"
     };
 
     return (

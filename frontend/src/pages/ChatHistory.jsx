@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageSquare, Calendar, ChevronRight, Search, Trash2, ArrowLeft, CheckSquare, Square } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { getUserSessions, deleteSessions } from "@/services/api";
+import { getUserSessions, deleteSessions } from "../services/api";
 import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from "react";
+import useLoader from "@/hooks/useLoader";
 
 const PAGE_SIZE = 10;
 
@@ -19,6 +20,8 @@ export default function ChatHistory() {
   const [selectedSessions, setSelectedSessions] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useLoader(true);
 
   useEffect(() => {
     fetchSessions();
@@ -153,8 +156,8 @@ export default function ChatHistory() {
             <div
               key={session.id}
               className={`group relative flex items-center p-4 bg-white dark:bg-gray-900 border rounded-xl transition-all ${selectedSessions.has(session.id)
-                  ? 'border-green-500 bg-green-50/10'
-                  : 'border-gray-200 dark:border-gray-800 hover:shadow-md'
+                ? 'border-green-500 bg-green-50/10'
+                : 'border-gray-200 dark:border-gray-800 hover:shadow-md'
                 }`}
             >
               {/* Checkbox */}

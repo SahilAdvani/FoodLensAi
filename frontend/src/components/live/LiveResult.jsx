@@ -1,6 +1,7 @@
 import React from 'react';
 import { RefreshCw, Volume2, Loader2 } from 'lucide-react';
 import VoiceInput from "@/components/chat/VoiceInput";
+import ReactMarkdown from "react-markdown";
 
 export default function LiveResult({
     result,
@@ -10,7 +11,8 @@ export default function LiveResult({
     onReplay,
     onVoiceQuery,
     language,
-    voiceInputRef
+    voiceInputRef,
+    onStopSpeaking
 }) {
     return (
         <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 p-6 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-30 animate-in slide-in-from-bottom-full duration-500 border-t border-gray-100 dark:border-gray-800 flex flex-col max-h-[60vh]">
@@ -31,9 +33,16 @@ export default function LiveResult({
 
             {/* Scrollable Content: Description + Conversation */}
             <div className="overflow-y-auto mb-4 custom-scrollbar flex-1">
-                <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed mb-6">
-                    {result.description}
-                </p>
+                <div className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 mb-6 text-left">
+                    <ReactMarkdown
+                        components={{
+                            h3: ({ node, ...props }) => <h3 className="text-lg font-bold mt-4 mb-2 text-gray-900 dark:text-white" {...props} />,
+                            p: ({ node, ...props }) => <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed mb-2" {...props} />
+                        }}
+                    >
+                        {result.description}
+                    </ReactMarkdown>
+                </div>
 
                 {/* Conversation History */}
                 {conversation.length > 0 && (
@@ -91,7 +100,8 @@ export default function LiveResult({
                         lang={language}
                         onStateChange={(isListening) => {
                             if (isListening) {
-                                window.speechSynthesis.cancel(); // If user taps mic manually
+                                if (onStopSpeaking) onStopSpeaking();
+                                else window.speechSynthesis.cancel();
                             }
                         }}
                     />
