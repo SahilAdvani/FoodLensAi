@@ -28,7 +28,8 @@ FoodLens AI is an intelligent nutrition assistant that combines **OCR (Optical C
 *   **FAISS**: Vector search for RAG.
 *   **Tesseract OCR**: Text extraction from images.
 *   **Supabase**: PostgreSQL database for chat history.
-*   **OpenAI/GitHub Models**: LLM for reasoning and response generation.
+*   **ElevenLabs**: Text to speech for live mode.
+*   **OpenAI/GitHub Models**: LLM for reasoning and response 
 
 ---
 

@@ -310,6 +310,7 @@ export default function Chat() {
               onFileUpload={handleFileUpload}
               showCaptureButton={!reviewMode}
               imageSrc={capturedImage}
+
             />
 
             {/* Tap to Scan */}

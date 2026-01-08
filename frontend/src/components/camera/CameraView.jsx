@@ -144,7 +144,7 @@ export default function CameraView({ isActive, onCapture, onReady, showCaptureBu
                             />
                             <button
                                 onClick={handleUploadClick}
-                                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full
+                                className="w-12 h-12 sm:w-12 p-3 sm:h-12 rounded-full
               bg-white/20 backdrop-blur-sm text-white
               hover:bg-white/40 transition"
                             >
@@ -154,7 +154,7 @@ export default function CameraView({ isActive, onCapture, onReady, showCaptureBu
                     )}
 
                     {/* Capture */}
-                    <div className="p-1 rounded-full border-4 border-white/30 pointer-events-auto">
+                    <div className="p-2 pb-1  rounded-full border-4 border-white/30 pointer-events-auto">
                         <button
                             onClick={handleCapture}
                             className="w-14 h-14 sm:w-16 sm:h-16 rounded-full

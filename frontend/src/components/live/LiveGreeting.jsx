@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Camera } from 'lucide-react';
 import VoiceVisualizer from './VoiceVisualizer';
 import { useTranslation } from 'react-i18next';
 
@@ -27,19 +27,6 @@ function LiveGreeting({ step, voiceState, onSkip }) {
             </p>
 
 
-            {/* Quick Action: Skip to Camera */}
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onSkip}
-                className="flex flex-col items-center gap-2 group pointer-events-auto"
-            >
-                <div className="p-4 rounded-full bg-white/10 group-hover:bg-white/20 border border-white/10 backdrop-blur-md transition-colors">
-                    <RefreshCw size={32} className="text-white" />
-                </div>
-                <span className="text-white/60 text-sm font-medium">Table Scan</span>
-            </motion.button>
-
             {!isSteadyStep && (
                 <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -51,7 +38,7 @@ function LiveGreeting({ step, voiceState, onSkip }) {
                         className={`p-4 rounded-full bg-white/10 border backdrop-blur-md transition-colors
               ${isCameraStep
                                 ? 'border-green-500 animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.5)]'
-                                : 'border-white/10'
+                                : 'border-white/10 hover:bg-white/20'
                             }`}
                     >
                         {isCameraStep ? (
@@ -62,7 +49,7 @@ function LiveGreeting({ step, voiceState, onSkip }) {
                     </div>
 
                     <span className="text-white/60 text-sm font-medium">
-                        {isCameraStep ? 'Start Camera' : 'Table Scan'}
+                        {isCameraStep ? t('live.startCamera') : 'Table Scan'}
                     </span>
                 </motion.button>
             )}
