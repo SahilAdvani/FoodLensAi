@@ -1,9 +1,12 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import { useSelector } from 'react-redux';
+import Footer from './Footer';
 
 export default function Layout({ children }) {
     const { mode } = useSelector((state) => state.theme);
+    const location = useLocation();
 
     React.useEffect(() => {
         const root = document.documentElement;
@@ -28,6 +31,7 @@ export default function Layout({ children }) {
             <main className="pt-16 min-h-[calc(100vh-4rem)]">
                 {children}
             </main>
+            {/* {location.pathname === '/' && <Footer />} */}
         </div>
     );
 }

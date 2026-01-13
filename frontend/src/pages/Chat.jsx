@@ -268,7 +268,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] max-w-3xl mx-auto px-3 py-2 sm:p-4 relative pb-safe bg-gray-50 dark:bg-gray-950">
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto px-3 py-2 sm:p-4 relative bg-gray-50 dark:bg-gray-950">
 
       {/* SEO */}
       <SEO
@@ -365,7 +365,7 @@ export default function Chat() {
 
       {/* Messages */}
       <div
-        className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-28 sm:mb-32 pr-1 custom-scrollbar"
+        className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 pr-1 custom-scrollbar"
         style={{ WebkitOverflowScrolling: "touch" }}
         data-lenis-prevent
       >
@@ -391,7 +391,7 @@ export default function Chat() {
       </div>
 
       {/* Input Bar */}
-      <div className="sticky bottom-0 z-30 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-md p-2 flex items-center gap-2 pb-safe">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-md p-2 flex items-center gap-2 pb-safe mt-2">
         <button
           onClick={() => setShowCamera(true)}
           className="p-2.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
