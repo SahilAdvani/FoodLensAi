@@ -1,0 +1,12 @@
+{
+    "ingredient": "Xanthan Gum",
+    "role": "Thickener / Stabilizer",
+    "summary": "Xanthan gum (E415) is a polysaccharide produced by bacterial fermentation, used to thicken, suspend particles, and stabilise sauces, dressings, gluten-free products, and beverages. It provides viscosity without altering taste and works across a wide pH range. Approved as safe by FDA, EFSA, and FSSAI with low risk at typical levels, though very high doses may cause digestive bloating or laxative effects. Suitable for most diets including vegan and halal.",
+    "evidence": "Generally supportive of safety",
+    "safe_limit": "ADI not specified; permitted at good manufacturing practice levels",
+    "sources": [
+        "FDA",
+        "FSSAI",
+        "EFSA"
+    ]
+}

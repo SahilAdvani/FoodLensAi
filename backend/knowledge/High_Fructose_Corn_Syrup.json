@@ -1,0 +1,12 @@
+{
+    "ingredient": "High Fructose Corn Syrup",
+    "role": "Sweetener",
+    "summary": "High fructose corn syrup (HFCS) is a liquid sweetener made from corn starch hydrolysis, used in beverages, baked goods, and processed foods for its sweetness and stability. It provides calories similar to sucrose but is metabolised differently, potentially leading to rapid blood sugar spikes and fat accumulation in the liver. Regular high consumption is linked to obesity, insulin resistance, type 2 diabetes, and elevated triglycerides. Health authorities recommend limiting HFCS and similar added sugars to reduce metabolic disease risk.",
+    "evidence": "Strong for harm at high intakes",
+    "safe_limit": "No specific ADI; limit as part of total added sugars (<10% of daily energy per WHO)",
+    "sources": [
+        "WHO",
+        "FSSAI",
+        "NCBI/NIH"
+    ]
+}

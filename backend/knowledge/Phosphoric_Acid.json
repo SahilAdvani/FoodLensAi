@@ -1,0 +1,12 @@
+{
+    "ingredient": "Phosphoric Acid",
+    "role": "Acidulant / Preservative",
+    "summary": "Phosphoric acid provides the sharp tanginess in colas and dark soft drinks while inhibiting microbial growth. It balances sweetness and contributes to the characteristic cola bite. Excessive long-term consumption from soft drinks is linked to lowered bone mineral density and potential kidney strain due to phosphorus overload. FSSAI and FDA regulate maximum levels in beverages.",
+    "evidence": "Mixed; safe at regulated levels, harm at high soft drink intake",
+    "safe_limit": "Regulated maximums in beverages (e.g., FSSAI cola standards); moderate total intake",
+    "sources": [
+        "FSSAI",
+        "FDA",
+        "EFSA"
+    ]
+}

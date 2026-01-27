@@ -1,0 +1,12 @@
+{
+    "ingredient": "Maltodextrin",
+    "role": "Bulking agent / Texturizer",
+    "summary": "Maltodextrin is a starch-derived carbohydrate powder used in powdered drink mixes, chip seasonings, and as a carrier for flavors/colors. Provides smooth texture and bulk without strong sweetness. High glycemic index causes rapid blood sugar spikes; unsuitable for low-carb diets or diabetics in large amounts. Common allergen carrier risk for those with corn/wheat sensitivities.",
+    "evidence": "Mixed; functional but metabolically similar to sugar",
+    "safe_limit": "No ADI; count toward total carbohydrate intake, avoid excess for glycemic control",
+    "sources": [
+        "FDA",
+        "FSSAI",
+        "Nutrition guidelines"
+    ]
+}

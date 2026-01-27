@@ -1,0 +1,12 @@
+{
+    "ingredient": "Tartrazine",
+    "role": "Colour",
+    "summary": "Tartrazine (E102, Yellow 5) is a synthetic azo dye used to impart yellow-orange hues to beverages, candies, snacks, and bakery items. It enhances visual appeal in products like soft drinks and confectionery. Some studies link it to hyperactivity in children and allergic reactions in sensitive individuals, prompting warning labels in some regions. FSSAI permits it within maximum levels per food category, with an ADI set by JECFA.",
+    "evidence": "Mixed",
+    "safe_limit": "ADI 0 to 7.5 mg/kg body weight per day; product-specific maximums (e.g., 100-200 mg/kg)",
+    "sources": [
+        "FSSAI",
+        "WHO/JECFA",
+        "FDA"
+    ]
+}

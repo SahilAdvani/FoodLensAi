@@ -1,0 +1,12 @@
+{
+    "ingredient": "Acrylamide",
+    "role": "Process contaminant (not added)",
+    "summary": "Acrylamide forms naturally during high-heat frying or baking of starchy foods like chips, cakes, biscuits, and fries via Maillard reaction. Classified as probable human carcinogen by IARC; linked to cancer and nerve damage in animal studies. Levels higher in golden-brown fried chips and baked crusts. Mitigation via lower temps/process tweaks recommended by regulators.",
+    "evidence": "Mixed; probable carcinogen, exposure reduction advised",
+    "safe_limit": "No ADI; benchmark levels set (e.g., EU 750 µg/kg in chips); minimize via cooking methods",
+    "sources": [
+        "WHO/IARC",
+        "FSSAI",
+        "EFSA"
+    ]
+}

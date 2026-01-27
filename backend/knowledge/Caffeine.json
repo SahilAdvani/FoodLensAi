@@ -1,0 +1,12 @@
+{
+    "ingredient": "Caffeine",
+    "role": "Stimulant / Flavour enhancer",
+    "summary": "Caffeine provides the stimulating 'kick' and bitter notes in colas, energy drinks, and some flavored sodas. Typical soft drink levels range from 30-50 mg per serving, less than coffee but cumulative across multiple drinks. Safe for most adults up to 400 mg/day, but children, pregnant women, and caffeine-sensitive individuals should limit exposure. Can cause jitteriness, insomnia, or dependency at higher intakes.",
+    "evidence": "Mixed; safe within limits, risks at high/chronic intake",
+    "safe_limit": "400 mg/day for healthy adults; FSSAI limits in soft drinks (145 mg/L max)",
+    "sources": [
+        "FSSAI",
+        "WHO",
+        "FDA"
+    ]
+}

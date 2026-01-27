@@ -1,0 +1,12 @@
+{
+    "ingredient": "Sunset Yellow",
+    "role": "Colour",
+    "summary": "Sunset Yellow (E110, Yellow 6) adds orange-red hues to orange-flavored chips, cakes, candies, and snacks. Synthetic azo dye enhances appeal but linked to hyperactivity in children and allergic reactions like urticaria. Southampton study prompted EU warnings; FSSAI permits with max levels. Avoid in sensitive groups.",
+    "evidence": "Mixed; behavioural/allergy concerns",
+    "safe_limit": "ADI 0–4 mg/kg body weight; FSSAI product-specific maximums (e.g., 100 mg/kg)",
+    "sources": [
+        "FSSAI",
+        "EFSA",
+        "WHO/JECFA"
+    ]
+}

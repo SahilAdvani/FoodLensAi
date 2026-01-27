@@ -1,0 +1,12 @@
+{
+    "ingredient": "BHA",
+    "role": "Antioxidant / Preservative",
+    "summary": "BHA (Butylated Hydroxyanisole, E320) preserves fats against oxidation in chips, cereals, cakes, and chewing gum. Prevents spoilage but flagged as possible carcinogen (IARC 2B) from rodent studies showing tumors. EFSA/JECFA consider it safe at low levels; some countries restrict use. Potential endocrine disruptor concerns emerging.",
+    "evidence": "Mixed; regulatory approval with limits",
+    "safe_limit": "ADI 0 to 0.5 mg/kg body weight; FSSAI max 200 mg/kg in fats",
+    "sources": [
+        "FSSAI",
+        "WHO/JECFA",
+        "IARC"
+    ]
+}
