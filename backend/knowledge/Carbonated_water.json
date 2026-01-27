@@ -1,0 +1,12 @@
+{
+    "ingredient": "Carbonated Water",
+    "role": "Base / Fizz provider",
+    "summary": "Carbonated water is water infused with carbon dioxide under pressure, creating the signature bubbles and mouthfeel in soft drinks. It forms the primary ingredient (90-95%) in most fizzy beverages like colas and lemonades. Generally safe and neutral, though the carbonation can cause bloating or acid reflux in sensitive individuals. Quality depends on water purification standards before carbonation.",
+    "evidence": "Generally safe",
+    "safe_limit": "No limits; primary beverage base when purified to food grade standards",
+    "sources": [
+        "FDA",
+        "FSSAI",
+        "WHO"
+    ]
+}

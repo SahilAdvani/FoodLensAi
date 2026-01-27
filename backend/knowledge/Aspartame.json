@@ -1,0 +1,12 @@
+{
+    "ingredient": "Aspartame",
+    "role": "Artificial sweetener",
+    "summary": "Aspartame (E951) is a low-calorie sweetener 200 times sweeter than sugar, used in diet sodas, gums, and sugar-free products to reduce calorie content. It breaks down into aspartic acid, phenylalanine, and methanol, which the body processes normally at low doses. Approved by WHO, FDA, and FSSAI with extensive safety reviews, but contraindicated for people with phenylketonuria (PKU) due to phenylalanine. Some controversy exists around headaches or cancer links, but major reviews find no causal evidence at approved intakes.",
+    "evidence": "Mixed; strong safety data but PKU warning",
+    "safe_limit": "ADI 40 mg/kg body weight per day (WHO/JECFA); e.g., ~18-19 cans diet soda for 70kg adult",
+    "sources": [
+        "WHO/JECFA",
+        "FDA",
+        "FSSAI"
+    ]
+}

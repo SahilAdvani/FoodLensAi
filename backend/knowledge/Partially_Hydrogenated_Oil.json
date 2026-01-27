@@ -1,0 +1,12 @@
+{
+    "ingredient": "Partially Hydrogenated Oil",
+    "role": "Shortening / Frying fat",
+    "summary": "Partially hydrogenated oils (PHOs) create trans fats used in cakes, biscuits, puffs, and some fried chips for crisp texture and long shelf life. Trans fats raise LDL cholesterol and lower HDL, significantly increasing heart disease and stroke risk. WHO urges global elimination; FSSAI caps total trans fats at 2% by 2022, but legacy products may exceed. Highly harmful even in small amounts.",
+    "evidence": "Strong evidence of harm",
+    "safe_limit": "FSSAI <2% of total fat; WHO recommends <1% of energy, ideally zero",
+    "sources": [
+        "FSSAI",
+        "WHO",
+        "NCBI/NIH"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "ingredient": "Mono- and Diglycerides",
+    "role": "Emulsifier",
+    "summary": "Mono- and diglycerides (E471) are fat-derived emulsifiers used to stabilise emulsions, improve texture, and extend shelf life in bread, ice cream, margarine, and processed meats. They help bind water and fat, preventing separation and enhancing softness or creaminess. Generally recognized as safe by FDA and FSSAI at approved levels, though high intake from ultra-processed foods may contribute to gut microbiota changes and inflammation. Sensitive individuals report digestive discomfort; moderation is advised.",
+    "evidence": "Mixed",
+    "safe_limit": "ADI not specified; used per good manufacturing practice and product-specific limits",
+    "sources": [
+        "FDA",
+        "FSSAI",
+        "EFSA"
+    ]
+}

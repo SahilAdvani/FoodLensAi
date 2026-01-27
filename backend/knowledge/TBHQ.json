@@ -1,0 +1,12 @@
+{
+    "ingredient": "TBHQ",
+    "role": "Antioxidant / Preservative",
+    "summary": "TBHQ (Tertiary Butylhydroquinone, E319) is a synthetic antioxidant used to prevent rancidity in chips, instant noodles, crackers, and fried snacks. It extends shelf life by inhibiting fat oxidation during frying and storage. Animal studies suggest potential cancer risk and endocrine disruption at high doses; human data is limited but prompts caution. FSSAI permits it but with maximum limits amid calls for tighter regulation.",
+    "evidence": "Mixed; concerns from animal studies",
+    "safe_limit": "FSSAI max 200 mg/kg in fats/oils; ADI 0 to 0.7 mg/kg body weight (JECFA)",
+    "sources": [
+        "FSSAI",
+        "WHO/JECFA",
+        "FDA"
+    ]
+}

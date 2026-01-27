@@ -1,0 +1,12 @@
+{
+    "ingredient": "Potassium Bromate",
+    "role": "Dough conditioner / Flour improver",
+    "summary": "Potassium bromate strengthens dough, improves bread volume, and creates uniform crumb texture in breads, buns, and cakes.[web:39][web:46] Classified as possible human carcinogen (IARC 2B) with animal studies showing kidney, thyroid, and other cancers at high doses.[web:40][web:47] Banned in India (2016), EU, Canada, China after residues persisted in finished products despite intended breakdown during baking.[web:42][web:43] FSSAI prohibits use entirely; legacy contamination remains a concern in informal bakeries.[web:44]",
+    "evidence": "Strong evidence of carcinogenicity",
+    "safe_limit": "Banned in India/EU; California Prop 65 chemical; no safe limit",
+    "sources": [
+        "FSSAI",
+        "WHO/IARC",
+        "FDA"
+    ]
+}
