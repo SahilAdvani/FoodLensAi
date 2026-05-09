@@ -34,13 +34,11 @@ export default function Live() {
         startLive,
 
         result,
-        setResult,
         cameraActive,
         setCameraActive,
         voiceState,
         sessionId,
         capturedImage,
-        setCapturedImage,
         showQR,
         setShowQR,
         showExitModal,
@@ -208,11 +206,7 @@ export default function Live() {
                         onVoiceQuery={txt =>
                             handleVoiceQuery(txt, user?.id)
                         }
-                        onReset={() => {
-                            setResult(null);
-                            setCapturedImage(null);
-                            handleRetake();
-                        }}
+                        onReset={handleRetake}
                     />
                 )}
             </div>

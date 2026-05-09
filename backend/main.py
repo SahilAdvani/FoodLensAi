@@ -8,10 +8,15 @@ load_dotenv()
 
 ENV = os.getenv("ENV", "development")
 
+PROD_ORIGIN = os.getenv("PROD_ORIGIN", "")
+DEV_ORIGIN = os.getenv("DEV_ORIGIN", "http://localhost:5173")
+
 if ENV == "production":
-    allowed_origins = [os.getenv("PROD_ORIGIN")]
+    allowed_origins = [origin.strip() for origin in PROD_ORIGIN.split(",") if origin.strip()]
+    if not allowed_origins:
+         allowed_origins = ["*"] # Fallback to wildcard for easier initial testing
 else:
-    allowed_origins = [os.getenv("DEV_ORIGIN", "http://localhost:5173")]
+    allowed_origins = [DEV_ORIGIN]
 
 app = FastAPI(
     title="Food Lens AI",
