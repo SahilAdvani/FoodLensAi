@@ -2,8 +2,8 @@ FROM python:3.10-slim AS builder
 WORKDIR /app
 COPY requirements.txt .
 # Install CPU-only Torch first to prevent downloading CUDA/Nvidia libs (saves ~3-4GB)
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir --only-binary=all -r requirements.txt \
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt \
     && rm -rf /root/.cache /tmp/*
 
 FROM python:3.10-slim
