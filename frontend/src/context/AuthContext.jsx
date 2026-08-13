@@ -16,6 +16,8 @@ export const AuthProvider = ({ children }) => {
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
+        }).catch(() => {
+            setLoading(false);
         });
 
         // Listen for changes
@@ -28,21 +30,29 @@ export const AuthProvider = ({ children }) => {
         return () => subscription.unsubscribe();
     }, []);
 
+    const signInWithGoogle = async () => {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: window.location.origin,
+            }
+        });
+        if (error) throw error;
+        return data;
+    };
+
+    const signOut = () => {
+        setUser(null);
+        setSession(null);
+        supabase.auth.signOut();
+    };
+
     const value = {
         user,
         session,
         loading,
-        signInWithGoogle: async () => {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: "google",
-                options: {
-                    redirectTo: window.location.origin,
-                }
-            });
-            if (error) throw error;
-            return data;
-        },
-        signOut: () => supabase.auth.signOut(),
+        signInWithGoogle,
+        signOut,
     };
 
     return (
