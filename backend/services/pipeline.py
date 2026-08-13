@@ -1,6 +1,6 @@
 from services.ocr import extract_text_from_image
 from services.extractor import extract_ingredients
-from services.rag_engine import RAGEngine
+from services.rag_engine import rag_engine
 
 MAX_INGREDIENTS = 6  # HARD LIMIT for speed + UX
 
@@ -15,7 +15,7 @@ SKIP_WORDS = {
 
 class FoodAnalysisPipeline:
     def __init__(self):
-        self.rag = RAGEngine()
+        self.rag = rag_engine
 
     def analyze_image(self, image_bytes: bytes, language: str = "en"):
         """

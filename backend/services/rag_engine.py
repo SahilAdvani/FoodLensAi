@@ -209,7 +209,7 @@ INSTRUCTIONS:
 
         try:
             response = self.client.chat.completions.create(
-                model="openai/gpt-4.1",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Keep it brief."},
                     {"role": "user", "content": prompt},
@@ -222,3 +222,6 @@ INSTRUCTIONS:
         except Exception as e:
             print(f"Title generation failed: {e}")
             return "Chat Session"
+
+# Single shared instance to prevent multiple SentenceTransformer model loads in memory
+rag_engine = RAGEngine()

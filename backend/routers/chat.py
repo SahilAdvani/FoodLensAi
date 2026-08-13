@@ -2,10 +2,9 @@ from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
 from typing import Optional, List
 from database import supabase
-from services.rag_engine import RAGEngine
+from services.rag_engine import rag_engine as rag
 
 router = APIRouter()
-rag = RAGEngine()
 
 class ChatMessage(BaseModel):
     session_id: str

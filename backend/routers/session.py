@@ -3,10 +3,9 @@ from pydantic import BaseModel
 from typing import Optional, List
 from database import supabase
 import uuid
-from services.rag_engine import RAGEngine
+from services.rag_engine import rag_engine as rag
 
 router = APIRouter()
-rag = RAGEngine()
 
 class CreateSessionRequest(BaseModel):
     user_id: Optional[str] = None
