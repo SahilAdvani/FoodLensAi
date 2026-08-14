@@ -64,6 +64,8 @@ export default function Chat() {
 
   // Initialize Session & Load History
   useEffect(() => {
+    let active = true;
+
     const initChat = async () => {
       // If URL has ID, load it
       if (routeSessionId) {
@@ -77,6 +79,7 @@ export default function Chat() {
         try {
           dispatch(clearCurrentChat());
           const history = await getChatHistory(routeSessionId);
+          if (!active) return;
           if (history && history.length > 0) {
             history.forEach(msg => {
               dispatch(addMessage({ role: msg.role === 'assistant' ? 'ai' : 'user', content: msg.content }));
@@ -94,12 +97,15 @@ export default function Chat() {
         if (user?.id) {
           try {
             const sessions = await getUserSessions(user.id);
-            setRecentSessions(sessions.slice(0, 4)); // Top 4 recent
+            if (active) {
+              setRecentSessions(sessions.slice(0, 4)); // Top 4 recent
+            }
           } catch (e) {
             console.error("Failed to load recent sessions", e);
           }
         }
 
+        if (!active) return;
         const greeting = currentLanguage === 'hi-IN'
           ? "नमस्ते! क्या आप किसी सामग्री के बारे में जानना चाहते हैं?"
           : "Hello! I am your AI nutritionist. Ask me anything about food ingredients.";
@@ -107,6 +113,10 @@ export default function Chat() {
       }
     };
     initChat();
+
+    return () => {
+      active = false;
+    };
   }, [routeSessionId, user, dispatch, currentLanguage]);
 
   const scrollToBottom = () => {
