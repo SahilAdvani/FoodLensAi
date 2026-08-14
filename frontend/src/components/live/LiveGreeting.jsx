@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Camera } from 'lucide-react';
 import VoiceVisualizer from './VoiceVisualizer';
 import { useTranslation } from 'react-i18next';
 

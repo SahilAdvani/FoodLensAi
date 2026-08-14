@@ -14,16 +14,22 @@ export default function LiveResult({
     voiceInputRef,
     onStopSpeaking
 }) {
+    const displayName = result.name || "Scan Analysis";
+    const safetyLevel = result.safety_level || (
+        result.description?.includes("🔴 Avoid") ? "Code Red" :
+        result.description?.includes("🟡 Caution") ? "Code Yellow" : "Code Green"
+    );
+
     return (
         <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 p-6 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-30 animate-in slide-in-from-bottom-full duration-500 border-t border-gray-100 dark:border-gray-800 flex flex-col max-h-[60vh]">
             {/* Header */}
             <div className="flex justify-between items-start mb-4 flex-shrink-0">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{result.name}</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{displayName}</h2>
                     <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold 
-                        ${result.safety_level === 'Code Green' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                            result.safety_level === 'Code Red' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
-                        {result.safety_level}
+                        ${safetyLevel === 'Code Green' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                            safetyLevel === 'Code Red' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
+                        {safetyLevel}
                     </div>
                 </div>
                 <button onClick={onReset} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-green-100 dark:hover:bg-green-900 text-gray-600 dark:text-gray-300 hover:text-green-600 transition-colors pointer-events-auto">

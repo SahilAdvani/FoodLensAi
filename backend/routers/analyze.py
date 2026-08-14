@@ -97,11 +97,7 @@ async def analyze_image(
 
         supabase.table("messages").insert(assistant_message).execute()
 
-        # Update cleanup to be safe
-        if 'clean_json' in locals():
-            result["analysis"] = clean_json
-        else:
-            result["analysis"] = raw_analysis
+        result["analysis"] = raw_analysis or formatted_content
 
         return {
             "success": True,
