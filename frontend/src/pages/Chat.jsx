@@ -339,30 +339,40 @@ export default function Chat() {
               </div>
             )}
 
-            {/* Review Controls */}
+            {/* Review Controls & Prompt Input */}
             {reviewMode && (
-              <div className="absolute inset-0 z-50 flex items-end justify-center pb-6 pointer-events-none">
-                <div className="flex gap-5 pointer-events-auto">
-                  <button
-                    onClick={handleRetake}
-                    className="w-14 h-14 rounded-full bg-gray-100 text-gray-800 flex items-center justify-center shadow-lg active:scale-95"
-                  >
-                    <RefreshCw size={22} />
-                  </button>
-
-                  <button
-                    onClick={handleClose}
-                    className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-95"
-                  >
-                    <X size={22} />
-                  </button>
-
-                  <button
-                    onClick={handleConfirm}
-                    className="w-16 h-16 rounded-full bg-green-600 text-white flex items-center justify-center shadow-xl ring-4 ring-white/30 active:scale-95"
-                  >
-                    <Check size={30} />
-                  </button>
+              <div className="absolute inset-0 z-50 flex flex-col justify-end bg-black/60 p-4">
+                <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 shadow-2xl flex flex-col gap-3 max-w-sm mx-auto w-full mb-2 border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom duration-300">
+                  <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                    Add a question (optional):
+                  </span>
+                  <input
+                    type="text"
+                    value={inputStr}
+                    onChange={(e) => setInputStr(e.target.value)}
+                    placeholder="e.g. Is this safe for sugar patients?"
+                    className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white"
+                  />
+                  <div className="flex justify-center gap-3 mt-1">
+                    <button
+                      onClick={handleRetake}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <RefreshCw size={15} /> Retake
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="py-2.5 px-3 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/30 text-sm font-semibold flex items-center justify-center active:scale-95 transition-all"
+                    >
+                      <X size={16} />
+                    </button>
+                    <button
+                      onClick={handleConfirm}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg active:scale-95 transition-all"
+                    >
+                      <Check size={16} /> Confirm
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

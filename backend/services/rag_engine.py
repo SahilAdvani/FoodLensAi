@@ -97,35 +97,27 @@ class RAGEngine:
 
         prompt_instruction = ""
         if user_prompt:
-            prompt_instruction = f"- Also directly address/answer the user's specific question/context regarding these ingredients: '{user_prompt}' inside the 'explanation' fields."
+            prompt_instruction = f"- Also directly address/answer the user's specific question/context regarding these ingredients: '{user_prompt}' inside the explanations."
 
         prompt = f"""
 You are a food safety assistant.
 
 CRITICAL RULES:
-- Use ONLY the information provided below
-- DO NOT add outside knowledge
-- DO NOT merge ingredients
-- Explain EACH ingredient SEPARATELY
-- If evidence is mixed, state that clearly
-- Explain in simple words for a layperson. Avoid technical jargon.
-- Focus on awareness: Is it Good/Bad? Why?
-- Keep tone calm and consumer-friendly
+- Use ONLY the information provided in the CONTEXT below.
+- DO NOT add outside knowledge.
+- Explain EACH ingredient separately.
+- Be friendly, clear, and act like a helpful nutritionist.
+- For each ingredient, determine if it is "🟢 Safe", "🟡 Caution", or "🔴 Avoid" based on the evidence, and explain why in simple human-understandable words.
+- Keep the explanations concise, clean, and consumer-friendly.
 - {lang_instruction}
 - {prompt_instruction}
 
-RETURN STRICT JSON ONLY in this format:
+Format your response in structured Markdown as follows:
 
-{{
-  "results": [
-    {{
-      "ingredient": "<name>",
-      "role": "<role>",
-      "evidence": "<evidence>",
-      "explanation": "<short explanation in simple words, optimized for speech>"
-    }}
-  ]
-}}
+### [Ingredient Name] — [🟢 Safe / 🟡 Caution / 🔴 Avoid]
+* **Role**: [Role of the ingredient]
+* **Evidence**: [Summary of scientific evidence]
+* **Explanation**: [Friendly, simple human-understandable explanation and nutrition advice]
 
 CONTEXT:
 {full_context}
@@ -134,10 +126,10 @@ CONTEXT:
         response = self.client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "You are a strict, grounded AI. Obey the rules exactly."},
+                {"role": "system", "content": "You are a friendly and strict nutrition expert. Explain food ingredients clearly in Markdown."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.1,
+            temperature=0.3,
             timeout=30,
         )
 

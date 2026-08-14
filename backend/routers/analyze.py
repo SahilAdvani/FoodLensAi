@@ -69,64 +69,26 @@ async def analyze_image(
         raw_analysis = result.get("analysis", "")
         formatted_content = raw_analysis
 
-        try:
-             clean_json = raw_analysis
-             if "```json" in clean_json:
-                 clean_json = clean_json.replace("```json", "").replace("```", "")
-             elif "```" in clean_json:
-                 clean_json = clean_json.replace("```", "")
-
-             parsed = json.loads(clean_json)
-             if "results" in parsed and isinstance(parsed["results"], list):
-                 formatted_content = ""
-                 speech_content = ""
-                 suggested_ingredients = []
-
-                 for item in parsed["results"]:
-                     name = item.get('ingredient', 'Unknown')
-                     suggested_ingredients.append(name)    
-                     evidence = item.get('evidence', '')   
-                     explanation = item.get('explanation', '')
-                     safety = '⚠️ Caution' if 'risk' in evidence.lower() or 'unsafe' in evidence.lower() else '✅ Safe'
-
-                     formatted_content += f"### {name} {safety}\n{explanation}\n\n"
-                     clean_name = re.sub(r'\s*\(.*?\)', '', name)
-                     speech_content += f"{clean_name}. {explanation} "
-
-                 if "hi" in language.lower():
-                     formatted_content += "\n\n**क्या आप इननमें से किसी के बारे में और जानना चाहते हैं? बस माइक टैप करे            और पूछें!** 🎙️"
-                     speech_content += "क्या आप इनमें से कि   िसी के बारे में और जानना चाहते हैं? बस माइक टैप करें और पूछे           ।"
-                 else:
-                     formatted_content += "\n\n**Do you want to know more about any of these? Just tap the mic and ask!** 🎙️"
-                     speech_content += "Do you want to know more about any of these? Just tap the mic and ask."       
-
-                 result["speech"] = speech_content
-             else:
-                 # Localize fallback message if possible   
-                 msg = result.get("message", "Analysis complete but no ingredients identified.")
-
-                 # Handle specific error messages from pipeline
-                 if "better quality image" in msg:
-                    if "hi" in language.lower():
-                        msg = "कृपया थोड़ी बेहतर गुणवत्ता वाली इनज के साथ पुनः प्रयास करें।"
-                    else:
-                        msg = "Please try again with a better quality image."
-                 elif "No recognizable ingredients" in msg:
-                    if "hi" in language.lower():
-                        msg = "कोई पहचान योग्य सामग्री नहीं मिली।"
-
-                 formatted_content = msg
-                 result["speech"] = formatted_content      
-
-        except Exception as e:
-             print(f"JSON formatting failed: {e}")
-             formatted_content = raw_analysis
-             # Ensure speech exists even on JSON parse failure
-             result["speech"] = "Analysis failed to parse."
-
-        # Fallback if speech is still missing (e.g. pipeline error with no message)
-        if "speech" not in result:
-             result["speech"] = result.get("error", "An unknown error occurred.")
+        if raw_analysis:
+            # Directly use the generated structured Markdown
+            if "hi" in language.lower():
+                formatted_content += "\n\n**क्या आप इनमें से किसी के बारे में और जानना चाहते हैं? बस माइक टैप करें और पूछें!** 🎙️"
+                result["speech"] = re.sub(r'#|\*|`|⚠️|✅|🟢|🟡|🔴', '', raw_analysis)[:300]
+            else:
+                formatted_content += "\n\n**Do you want to know more about any of these? Just tap the mic and ask!** 🎙️"
+                result["speech"] = re.sub(r'#|\*|`|⚠️|✅|🟢|🟡|🔴', '', raw_analysis)[:300]
+        else:
+            msg = result.get("message", "Analysis complete but no ingredients identified.")
+            if "better quality image" in msg:
+                if "hi" in language.lower():
+                    msg = "कृपया थोड़ी बेहतर गुणवत्ता वाली इमेज के साथ पुनः प्रयास करें।"
+                else:
+                    msg = "Please try again with a better quality image."
+            elif "No recognizable ingredients" in msg:
+                if "hi" in language.lower():
+                    msg = "कोई पहचान योग्य सामग्री नहीं मिली।"
+            formatted_content = msg
+            result["speech"] = formatted_content
 
         assistant_message = {
              "session_id": session_id,
