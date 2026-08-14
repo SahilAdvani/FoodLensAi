@@ -164,7 +164,7 @@ export default function CameraView({ isActive, onCapture, onReady, showCaptureBu
                                 onClick={handleUploadClick}
                                 className="w-11 h-11 sm:w-12 sm:h-12 rounded-full
               bg-white/20 backdrop-blur-sm text-white
-              hover:bg-white/40 transition"
+              hover:bg-white/40 transition flex items-center justify-center"
                             >
                                 <Upload size={22} />
                             </button>
