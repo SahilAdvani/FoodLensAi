@@ -138,6 +138,15 @@ export const getChatHistory = async sessionId => {
     }
 };
 
+export const transcribeAudio = async (audioBlob) => {
+    const form = new FormData();
+    form.append('file', audioBlob, 'audio.webm');
+    return fetchJSON(`${API_URL}/chat/transcribe`, {
+        method: 'POST',
+        body: form
+    });
+};
+
 /* ---------------- TTS ---------------- */
 
 export const textToSpeech = async (

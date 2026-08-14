@@ -1,10 +1,32 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List
+import io
 from database import supabase
 from services.rag_engine import rag_engine as rag
 
 router = APIRouter()
+
+@router.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    """
+    Transcribe recorded browser audio using Groq's free Whisper API.
+    """
+    try:
+        audio_bytes = await file.read()
+        audio_file = io.BytesIO(audio_bytes)
+        audio_file.name = "audio.webm" # Browser MediaRecorder WebM file
+
+        response = rag.client.audio.transcriptions.create(
+            model="whisper-large-v3",
+            file=audio_file
+        )
+        return {"text": response.text}
+    except Exception as e:
+        print(f"Transcription Error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 class ChatMessage(BaseModel):
     session_id: str
