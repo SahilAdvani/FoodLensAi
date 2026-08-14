@@ -18,13 +18,16 @@ class RAGEngine:
     def __init__(self):
         self.vector_store = VectorStore()
 
-        api_key = os.getenv("GITHUB_TOKEN_FINE")
+        # Use Groq API key or fallback to GITHUB_TOKEN_FINE if using custom endpoint
+        api_key = os.getenv("GROQ_API_KEY") or os.getenv("GITHUB_TOKEN_FINE")
         if not api_key:
-            raise RuntimeError("GITHUB_TOKEN_FINE is not set")
-
+            raise RuntimeError("GROQ_API_KEY or GITHUB_TOKEN_FINE is not set")
+            
+        base_url = os.getenv("GROQ_BASE_URL") # Allow custom endpoints if specified
+        
         self.client = OpenAI(
+            base_url=base_url if base_url else None,
             api_key=api_key,
-            base_url="https://models.github.ai/inference",
         )
 
     def retrieve_context(self, ingredient: str, top_k: int = 3) -> List[Dict]:
@@ -61,7 +64,7 @@ class RAGEngine:
                 })
         return flat_results
 
-    def explain_ingredients_batch(self, ingredients: List[str], language: str = "en") -> Dict:
+    def explain_ingredients_batch(self, ingredients: List[str], language: str = "en", user_prompt: str = None) -> Dict:
         """
         Explain multiple ingredients in ONE call, but with strict separation.
         """
@@ -92,6 +95,10 @@ class RAGEngine:
             # Explicitly ask for Devanagari + simple Hinglish style for natural speech
             lang_instruction = "IMPORTANT: Write the 'explanation' and 'role' field values in clear Hindi (Devanagari script) mixed with common English terms (Hinglish style) for natural conversation. e.g. 'Ye ingredient safe hai'. Keep 'ingredient' name in English."
 
+        prompt_instruction = ""
+        if user_prompt:
+            prompt_instruction = f"- Also directly address/answer the user's specific question/context regarding these ingredients: '{user_prompt}' inside the 'explanation' fields."
+
         prompt = f"""
 You are a food safety assistant.
 
@@ -105,6 +112,7 @@ CRITICAL RULES:
 - Focus on awareness: Is it Good/Bad? Why?
 - Keep tone calm and consumer-friendly
 - {lang_instruction}
+- {prompt_instruction}
 
 RETURN STRICT JSON ONLY in this format:
 
@@ -124,7 +132,7 @@ CONTEXT:
 """
 
         response = self.client.chat.completions.create(
-            model="gpt-4o",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "You are a strict, grounded AI. Obey the rules exactly."},
                 {"role": "user", "content": prompt},
@@ -183,7 +191,7 @@ INSTRUCTIONS:
 """
 
         response = self.client.chat.completions.create(
-            model="gpt-4o",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "You are a helpful nutrition assistant."},
                 {"role": "user", "content": prompt},
@@ -209,7 +217,7 @@ INSTRUCTIONS:
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="llama-3.1-8b-instant",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Keep it brief."},
                     {"role": "user", "content": prompt},

@@ -17,6 +17,16 @@ const MessageBubble = ({ msg }) => {
                 : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 rounded-tl-none shadow-sm'
                 }`}>
 
+                {msg.image && (
+                    <div className="mb-2">
+                        <img 
+                            src={msg.image} 
+                            alt="Uploaded food label" 
+                            className="max-w-xs sm:max-w-md max-h-60 rounded-xl object-cover border border-black/10 dark:border-white/10 shadow-sm" 
+                        />
+                    </div>
+                )}
+
                 {isUser ? (
                     msg.content
                 ) : (

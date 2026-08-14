@@ -202,6 +202,16 @@ export default function Chat() {
     setReviewMode(false);
     dispatch(setLoading(true));
 
+    const promptText = inputStr;
+    setInputStr('');
+
+    // Render the uploaded image in user's chat bubble immediately
+    dispatch(addMessage({ 
+      role: 'user', 
+      content: promptText || (currentLanguage === 'hi-IN' ? "विश्लेषण के लिए छवि अपलोड की गई" : "Image uploaded for analysis"), 
+      image: capturedImage 
+    }));
+
     try {
       let currentSess = sessionId;
       if (!currentSess) {
@@ -218,7 +228,7 @@ export default function Chat() {
         imageBlob = await res.blob();
       }
 
-      const data = await analyzeImage(imageBlob, currentSess, user?.id);
+      const data = await analyzeImage(imageBlob, currentSess, user?.id, currentLanguage === 'hi-IN' ? 'hi' : 'en', promptText);
       const resultData = data.data;
 
       // Parse Analysis result

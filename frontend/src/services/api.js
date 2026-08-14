@@ -85,13 +85,15 @@ export const analyzeImage = async (
     imageBlob,
     sessionId,
     userId = null,
-    language = 'en'
+    language = 'en',
+    userPrompt = null
 ) => {
     const form = new FormData();
     form.append('image', imageBlob, 'capture.jpg');
     form.append('session_id', sessionId);
     if (userId) form.append('user_id', userId);
     form.append('language', language);
+    if (userPrompt) form.append('user_prompt', userPrompt);
 
     const res = await fetchWithTimeout(`${API_URL}/analyze`, {
         method: 'POST',

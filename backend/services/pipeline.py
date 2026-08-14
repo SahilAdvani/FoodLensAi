@@ -17,7 +17,7 @@ class FoodAnalysisPipeline:
     def __init__(self):
         self.rag = rag_engine
 
-    def analyze_image(self, image_bytes: bytes, language: str = "en"):
+    def analyze_image(self, image_bytes: bytes, language: str = "en", user_prompt: str = None):
         """
         Optimized & confidence-driven pipeline:
         Image → OCR → Ingredient extraction → Confidence ranking → Batched RAG
@@ -91,7 +91,7 @@ class FoodAnalysisPipeline:
 
         # Step 7: Batched RAG explanation (SINGLE call)
         try:
-            analysis = self.rag.explain_ingredients_batch(selected_ingredients, language=language)
+            analysis = self.rag.explain_ingredients_batch(selected_ingredients, language=language, user_prompt=user_prompt)
         except Exception as e:
             return {
                 "success": False,

@@ -22,7 +22,8 @@ async def analyze_image(
     image: UploadFile = File(...),
     session_id: str = Form(...),
     user_id: Optional[str] = Form(None),
-    language: str = Form("en")
+    language: str = Form("en"),
+    user_prompt: Optional[str] = Form(None)
 ):
     if not image.content_type.startswith("image/"):        
         raise HTTPException(status_code=400, detail="Invalid image file")
@@ -42,7 +43,7 @@ async def analyze_image(
         user_message = {
             "session_id": session_id,
             "role": "user",
-            "content": "Image uploaded for analysis",      
+            "content": f"Image uploaded for analysis. Question: {user_prompt}" if user_prompt else "Image uploaded for analysis",      
             "source": "image_upload"
         }
         if user_id:
@@ -57,7 +58,7 @@ async def analyze_image(
     try:
         # 2. Analyze
         loop = asyncio.get_running_loop()
-        func = functools.partial(get_pipeline().analyze_image, image_bytes, language=language)
+        func = functools.partial(get_pipeline().analyze_image, image_bytes, language=language, user_prompt=user_prompt)
         result = await loop.run_in_executor(None, func)
         print(f"DEBUG: Pipeline result keys: {result.keys()}")
         if 'analysis' in result:

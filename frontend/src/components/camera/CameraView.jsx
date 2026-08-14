@@ -93,9 +93,27 @@ export default function CameraView({ isActive, onCapture, onReady, showCaptureBu
 
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center h-full bg-gray-100 dark:bg-gray-900 rounded-2xl p-8 text-center text-red-500">
-                <Camera size={48} className="mb-4 opacity-50" />
-                <p>{error}</p>
+            <div className="flex flex-col items-center justify-center h-full bg-gray-100 dark:bg-gray-900 rounded-2xl p-8 text-center text-red-500 relative">
+                <Camera size={48} className="mb-4 opacity-50 mx-auto" />
+                <p className="mb-4">{error}</p>
+                {onFileUpload && (
+                    <div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={handleFileChange}
+                        />
+                        <button
+                            onClick={handleUploadClick}
+                            className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition flex items-center gap-2 mx-auto font-medium shadow pointer-events-auto"
+                        >
+                            <Upload size={16} />
+                            Upload from Files
+                        </button>
+                    </div>
+                )}
             </div>
         )
     }
