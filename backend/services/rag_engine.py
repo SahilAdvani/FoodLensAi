@@ -134,7 +134,6 @@ CONTEXT:
         )
 
         content = response.choices[0].message.content.strip()
-        print(f"DEBUG: Raw RAG response:\n{content}")
         return content
 
     def chat_completion(self, history: List[Dict], query: str) -> str:

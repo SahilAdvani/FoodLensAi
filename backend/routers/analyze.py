@@ -60,10 +60,6 @@ async def analyze_image(
         loop = asyncio.get_running_loop()
         func = functools.partial(get_pipeline().analyze_image, image_bytes, language=language, user_prompt=user_prompt)
         result = await loop.run_in_executor(None, func)
-        print(f"DEBUG: Pipeline result keys: {result.keys()}")
-        if 'analysis' in result:
-             print(f"DEBUG: Analysis type: {type(result['analysis'])}")
-             print(f"DEBUG: Analysis preview: {result['analysis'][:100]}...")
 
         # Format the content into Markdown before saving   
         raw_analysis = result.get("analysis", "")
