@@ -40,7 +40,7 @@ app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(tts.router)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def health_check():
     return {
         "status": "Backend is running",
