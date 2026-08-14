@@ -62,7 +62,7 @@ export default function Home() {
           <img
             src="/hero-scan.png"
             alt="Person scanning chips packet with FoodLensAI"
-            className="w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500 rounded-3xl"
+            className="w-full h-auto rounded-3xl shadow-2xl hover:scale-[1.02] transition-transform duration-500 border border-gray-200/50 dark:border-gray-700/50"
           />
         </motion.div>
       </section>
