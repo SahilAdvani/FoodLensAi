@@ -11,6 +11,14 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Clean up URL hash on mount if present
+        if (window.location.hash) {
+            setTimeout(() => {
+                const cleanUrl = window.location.href.split('#')[0];
+                window.history.replaceState(null, document.title, cleanUrl);
+            }, 300);
+        }
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
@@ -26,14 +34,11 @@ export const AuthProvider = ({ children }) => {
             setUser(session?.user ?? null);
             setLoading(false);
 
-            // Clean up the URL hash only AFTER Supabase has successfully processed the session
-            if (event === "SIGNED_IN" && window.location.hash && (window.location.hash.includes("access_token=") || window.location.hash.includes("error="))) {
+            // Clean up the URL hash (whether it has the token or just a trailing #)
+            if (window.location.hash) {
                 setTimeout(() => {
-                    window.history.replaceState(
-                        null, 
-                        document.title, 
-                        window.location.pathname + window.location.search
-                    );
+                    const cleanUrl = window.location.href.split('#')[0];
+                    window.history.replaceState(null, document.title, cleanUrl);
                 }, 100);
             }
         });
