@@ -27,6 +27,22 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         });
 
+        // Detect Supabase OAuth token callback, clean hash, and redirect to clean homepage /
+        if (window.location.hash && (window.location.hash.includes("access_token=") || window.location.hash.includes("error="))) {
+            const isSuccess = window.location.hash.includes("access_token=");
+            setTimeout(() => {
+                window.history.replaceState(
+                    null, 
+                    document.title, 
+                    window.location.pathname + window.location.search
+                );
+            }, 100);
+
+            if (isSuccess) {
+                window.location.href = "/";
+            }
+        }
+
         return () => subscription.unsubscribe();
     }, []);
 
