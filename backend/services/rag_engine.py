@@ -92,32 +92,37 @@ class RAGEngine:
 
         lang_instruction = ""
         if "hi" in language.lower() or "hindi" in language.lower():
-            # Explicitly ask for Devanagari + simple Hinglish style for natural speech
-            lang_instruction = "IMPORTANT: Write the 'explanation' and 'role' field values in clear Hindi (Devanagari script) mixed with common English terms (Hinglish style) for natural conversation. e.g. 'Ye ingredient safe hai'. Keep 'ingredient' name in English."
+            lang_instruction = "IMPORTANT: Write all explanations and the summary in clear Hindi (Devanagari script) mixed with common English terms (Hinglish style) for natural conversation. Keep ingredient names in English."
 
         prompt_instruction = ""
         if user_prompt:
-            prompt_instruction = f"- Also directly address/answer the user's specific question/context regarding these ingredients: '{user_prompt}' inside the explanations."
+            prompt_instruction = f"- Focus your summary and ingredient analysis specifically on answering the user's question: '{user_prompt}'."
 
         prompt = f"""
-You are a food safety assistant.
+You are FoodLens AI, a friendly and expert human nutritionist. 
+
+Analyze the ingredients in the CONTEXT below and answer the user's query.
 
 CRITICAL RULES:
-- Use ONLY the information provided in the CONTEXT below.
-- DO NOT add outside knowledge.
-- Explain EACH ingredient separately.
-- Be friendly, clear, and act like a helpful nutritionist.
-- For each ingredient, determine if it is "🟢 Safe", "🟡 Caution", or "🔴 Avoid" based on the evidence, and explain why in simple human-understandable words.
-- Keep the explanations concise, clean, and consumer-friendly.
+- Use ONLY the information provided in the CONTEXT. Do not invent facts.
+- Start with a direct, conversational summary that answers the user's specific question (if any).
+- List each ingredient in a clean bullet point.
+- For each ingredient, give a simple 1-2 sentence explanation of why it is "🟢 Safe", "🟡 Caution", or "🔴 Avoid", written in friendly, human-understandable language (no medical jargon).
+- DO NOT use headers like 'Role:', 'Evidence:', or 'Explanation:'. Just state the explanation directly in plain text.
 - {lang_instruction}
 - {prompt_instruction}
 
-Format your response in structured Markdown as follows:
+Format your response in structured Markdown EXACTLY as follows:
 
-### [Ingredient Name] — [🟢 Safe / 🟡 Caution / 🔴 Avoid]
-* **Role**: [Role of the ingredient]
-* **Evidence**: [Summary of scientific evidence]
-* **Explanation**: [Friendly, simple human-understandable explanation and nutrition advice]
+## 🥗 Quick Summary
+[A warm, conversational 2-3 sentence summary explaining the overall health/safety impact of this food product, directly answering the user's question if provided.]
+
+---
+
+## 🔍 Ingredient Breakdown
+* **[Ingredient Name]** — [🟢 Safe / 🟡 Caution / 🔴 Avoid]: [Friendly, simple 1-2 sentence explanation of its safety/role, tailored to the user's question if applicable.]
+
+*(Repeat the bullet point for each detected ingredient)*
 
 CONTEXT:
 {full_context}
@@ -126,7 +131,7 @@ CONTEXT:
         response = self.client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "You are a friendly and strict nutrition expert. Explain food ingredients clearly in Markdown."},
+                {"role": "system", "content": "You are a friendly human nutritionist who explains ingredients clearly in simple Markdown bullet points."},
                 {"role": "user", "content": prompt},
             ],
             temperature=0.3,
