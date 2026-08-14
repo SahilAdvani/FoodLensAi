@@ -21,27 +21,22 @@ export const AuthProvider = ({ children }) => {
         });
 
         // Listen for changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
-        });
 
-        // Detect Supabase OAuth token callback, clean hash, and redirect to clean homepage /
-        if (window.location.hash && (window.location.hash.includes("access_token=") || window.location.hash.includes("error="))) {
-            const isSuccess = window.location.hash.includes("access_token=");
-            setTimeout(() => {
-                window.history.replaceState(
-                    null, 
-                    document.title, 
-                    window.location.pathname + window.location.search
-                );
-            }, 100);
-
-            if (isSuccess) {
-                window.location.href = "/";
+            // Clean up the URL hash only AFTER Supabase has successfully processed the session
+            if (event === "SIGNED_IN" && window.location.hash && (window.location.hash.includes("access_token=") || window.location.hash.includes("error="))) {
+                setTimeout(() => {
+                    window.history.replaceState(
+                        null, 
+                        document.title, 
+                        window.location.pathname + window.location.search
+                    );
+                }, 100);
             }
-        }
+        });
 
         return () => subscription.unsubscribe();
     }, []);
