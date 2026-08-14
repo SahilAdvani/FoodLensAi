@@ -27,42 +27,25 @@ function LiveGreeting({ step, voiceState, onSkip }) {
             </p>
 
 
-            {/* Quick Action: Skip to Camera */}
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onSkip}
-                className="flex flex-col items-center gap-2 group pointer-events-auto"
-            >
-                <div className="p-4 rounded-full bg-white/10 group-hover:bg-white/20 border border-white/10 backdrop-blur-md transition-colors">
-                    <RefreshCw size={32} className="text-white" />
-                </div>
-                <span className="text-white/60 text-sm font-medium">Table Scan</span>
-            </motion.button>
-
             {!isSteadyStep && (
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={onSkip}
-                    className="flex flex-col items-center gap-2 pointer-events-auto"
+                    className="flex flex-col items-center gap-2 pointer-events-auto animate-fade-in"
                 >
                     <div
                         className={`p-4 rounded-full bg-white/10 border backdrop-blur-md transition-colors
               ${isCameraStep
                                 ? 'border-green-500 animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.5)]'
-                                : 'border-white/10'
+                                : 'border-white/10 hover:bg-white/20'
                             }`}
                     >
-                        {isCameraStep ? (
-                            <Camera size={32} className="text-white" />
-                        ) : (
-                            <RefreshCw size={32} className="text-white" />
-                        )}
+                        <Camera size={32} className="text-white" />
                     </div>
 
-                    <span className="text-white/60 text-sm font-medium">
-                        {isCameraStep ? 'Start Camera' : 'Table Scan'}
+                    <span className="text-white/80 text-sm font-semibold tracking-wide">
+                        {isCameraStep ? 'Start Camera' : 'Skip Intro'}
                     </span>
                 </motion.button>
             )}
