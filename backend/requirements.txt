@@ -6,7 +6,5 @@ pytesseract
 python-dotenv
 supabase
 openai
-faiss-cpu
-sentence-transformers
 elevenlabs
 edge-tts

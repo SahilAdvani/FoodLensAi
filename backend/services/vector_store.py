@@ -1,65 +1,49 @@
-import faiss
-import numpy as np
-from sentence_transformers import SentenceTransformer      
+import difflib
 from typing import List, Dict
+from services.knowledge_loader import load_knowledge
 
-from services.knowledge_loader import load_knowledge       
-
+def get_similarity(s1: str, s2: str) -> float:
+    s1_clean = s1.lower().strip()
+    s2_clean = s2.lower().strip()
+    # Direct substring checks (e.g. "Sugar" in "Added Sugar")
+    if s1_clean in s2_clean or s2_clean in s1_clean:
+        return 0.95 + 0.05 * (min(len(s1_clean), len(s2_clean)) / max(len(s1_clean), len(s2_clean)))
+    # Fuzzy match ratio fallback
+    return difflib.SequenceMatcher(None, s1_clean, s2_clean).ratio()
 
 class VectorStore:
     def __init__(self):
-        # Load embedding model
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
-
         # Load knowledge documents
         self.documents = load_knowledge()
-
-        # Prepare texts for embedding
-        self.texts = [
-            f"{doc['ingredient']}. Role: {doc['role']}. {doc['summary']}. Evidence: {doc['evidence']}."
-            for doc in self.documents
-        ]
-
-        # Create embeddings
-        embeddings = self.model.encode(self.texts, convert_to_numpy=True)
-
-        # Normalize embeddings (important for cosine similarity)
-        faiss.normalize_L2(embeddings)
-
-        # Create FAISS index
-        dim = embeddings.shape[1]
-        self.index = faiss.IndexFlatIP(dim)
-        self.index.add(embeddings)
+        print(f"[INFO] Loaded {len(self.documents)} knowledge documents for lightweight matcher.")
 
     def search(self, query: str, top_k: int = 2) -> List[Dict]:
-        return self.search_batch([query], top_k)[0]        
+        return self.search_batch([query], top_k)[0]
 
     def search_batch(self, queries: List[str], top_k: int = 2) -> List[List[Dict]]:
         if not queries:
             return []
 
-        # encode batch
-        query_embeddings = self.model.encode(queries, convert_to_numpy=True)
-        faiss.normalize_L2(query_embeddings)
-
-        # search batch
-        # D: distances (scores), I: indices
-        scores, indices = self.index.search(query_embeddings, top_k)
-
         all_results = []
-        for i in range(len(queries)):
+        for q in queries:
             query_results = []
-            for score, idx in zip(scores[i], indices[i]):  
-                if idx == -1: continue # Should not happen with IndexFlatIP unless empty
-                doc = self.documents[idx]
-                query_results.append({
-                    "ingredient": doc["ingredient"],       
-                    "role": doc["role"],
-                    "summary": doc["summary"],
-                    "evidence": doc["evidence"],
-                    "confidence_score": float(score)       
-                })
-            all_results.append(query_results)
+            for doc in self.documents:
+                # Compute similarity between query and document ingredient name
+                score = get_similarity(q, doc["ingredient"])
+                if score >= 0.35: # Keep reasonable matches
+                    query_results.append({
+                        "ingredient": doc["ingredient"],
+                        "role": doc["role"],
+                        "summary": doc["summary"],
+                        "evidence": doc["evidence"],
+                        "confidence_score": float(score)
+                    })
+            
+            # Sort by score descending
+            query_results.sort(key=lambda x: x["confidence_score"], reverse=True)
+            all_results.append(query_results[:top_k])
 
         return all_results
 
+# Global Instance
+vector_store = VectorStore()
