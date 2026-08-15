@@ -99,28 +99,30 @@ class RAGEngine:
             prompt_instruction = f"- Focus your summary and ingredient analysis specifically on answering the user's question: '{user_prompt}'."
 
         prompt = f"""
-You are FoodLens AI, a friendly and expert human nutritionist. 
+You are FoodLens AI, a friendly and simple human nutritionist. 
 
-Analyze the ingredients in the CONTEXT below and answer the user's query.
+Analyze the ingredients in the CONTEXT below.
 
 CRITICAL RULES:
 - Use ONLY the information provided in the CONTEXT. Do not invent facts.
-- Start with a direct, conversational summary that answers the user's specific question (if any).
-- List each ingredient in a clean bullet point.
-- For each ingredient, give a simple 1-2 sentence explanation of why it is "🟢 Safe", "🟡 Caution", or "🔴 Avoid", written in friendly, human-understandable language (no medical jargon).
-- DO NOT use headers like 'Role:', 'Evidence:', or 'Explanation:'. Just state the explanation directly in plain text.
+- **VERDICT FIRST**: The very first sentence of your "Quick Summary" MUST be an explicit, bolded verdict telling the user whether it is safe, caution-worthy, or unsafe for them to eat (e.g., "**VERDICT: 🔴 Avoid this product as it is unsafe for regular consumption.**" or "**VERDICT: 🟢 Safe to consume in moderation.**").
+- **COMMON MAN LANGUAGE**: Keep all text simple, friendly, and extremely brief. 
+- **ONE-SENTENCE EXPLANATIONS**: For each ingredient, give a single, super short explanation (maximum 10-15 words!) explaining why it is Safe/Caution/Avoid in plain layman words.
+  * Bad example: "Maltodextrin is a starch-derived carbohydrate powder used as a bulking agent with high glycemic index that raises blood sugar."
+  * Good example: "Bad because it causes rapid blood sugar spikes, especially for diabetics."
+- DO NOT use headers like 'Role:', 'Evidence:', or 'Explanation:'. Just state the brief explanation directly in plain text.
 - {lang_instruction}
 - {prompt_instruction}
 
 Format your response in structured Markdown EXACTLY as follows:
 
 ## 🥗 Quick Summary
-[A warm, conversational 2-3 sentence summary explaining the overall health/safety impact of this food product, directly answering the user's question if provided.]
+[Bolded Verdict first. Followed by a friendly, 1-2 sentence overall summary answering the user's question if provided.]
 
 ---
 
 ## 🔍 Ingredient Breakdown
-* **[Ingredient Name]** — [🟢 Safe / 🟡 Caution / 🔴 Avoid]: [Friendly, simple 1-2 sentence explanation of its safety/role, tailored to the user's question if applicable.]
+* **[Ingredient Name]** — [🟢 Safe / 🟡 Caution / 🔴 Avoid]: [A single, super short layman sentence (max 12 words) explaining why it is safe, caution-worthy, or should be avoided.]
 
 *(Repeat the bullet point for each detected ingredient)*
 
@@ -141,7 +143,7 @@ CONTEXT:
         content = response.choices[0].message.content.strip()
         return content
 
-    def chat_completion(self, history: List[Dict], query: str) -> str:
+    def chat_completion(self, history: List[Dict], query: str, language: str = "en-US") -> str:
         """
         Handle chat queries with history context.
         """
@@ -163,6 +165,10 @@ CONTEXT:
             role = "User" if msg["role"] == "user" else "Assistant"
             history_text += f"{role}: {msg['content']}\n"
 
+        lang_instruction = "Write your entire response in English."
+        if language and ("hi" in language.lower() or "hindi" in language.lower()):
+            lang_instruction = "IMPORTANT: Write your response in clear Hindi (Devanagari script) mixed with common English terms (Hinglish style) for natural conversation. Keep ingredient names in English."
+
         # 3. Construct Prompt
         prompt = f"""
 You are FoodLens AI, a helpful nutrition assistant using simple words.
@@ -182,7 +188,7 @@ INSTRUCTIONS:
 - Use CONVERSATION HISTORY to understand context.
 - If the answer isn't in the knowledge base, use general food safety knowledge but mention it's general advice.
 - Keep answers concise and helpful.
-- DETECT LANGUAGE: If the user asks in Hindi, answer in Hindi (Devanagari).
+- **LANGUAGE REQUIREMENT**: {lang_instruction}
 - END WITH A SUGGESTION.
 """
 

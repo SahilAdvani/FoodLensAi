@@ -116,7 +116,8 @@ export const analyzeImage = async (
 export const sendMessage = async (
     sessionId,
     message,
-    userId = null
+    userId = null,
+    language = "en-US"
 ) =>
     fetchJSON(`${API_URL}/chat/message`, {
         method: 'POST',
@@ -125,6 +126,7 @@ export const sendMessage = async (
             session_id: sessionId,
             message,
             user_id: userId,
+            language
         }),
     });
 

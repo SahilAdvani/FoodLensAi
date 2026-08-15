@@ -348,7 +348,7 @@ export function useLiveMode() {
             ]);
 
             try {
-                const res = await sendMessage(sessionId, text, userId);
+                const res = await sendMessage(sessionId, text, userId, currentLanguage);
 
                 setConversation(prev => {
                     const next = [...prev];

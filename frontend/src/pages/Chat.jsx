@@ -154,7 +154,7 @@ export default function Chat() {
         navigate(`/chat/${currentSess}`, { replace: true });
       }
 
-      const response = await sendMessage(currentSess, text, user?.id);
+      const response = await sendMessage(currentSess, text, user?.id, currentLanguage);
       dispatch(addMessage({ role: 'ai', content: response.content, animate: true }));
 
       // Generate Title for new chats (Fire & Forget)

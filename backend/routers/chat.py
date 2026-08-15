@@ -32,6 +32,7 @@ class ChatMessage(BaseModel):
     session_id: str
     message: str
     user_id: Optional[str] = None
+    language: Optional[str] = "en-US"
 
 @router.post("/message")
 async def chat_message(data: ChatMessage):
@@ -63,7 +64,7 @@ async def chat_message(data: ChatMessage):
         history = history_response.data[::-1] if history_response.data else []
 
         # 3. Generate AI Response
-        ai_response_text = rag.chat_completion(history, data.message)
+        ai_response_text = rag.chat_completion(history, data.message, language=data.language)
 
         # 4. Save AI Message
         ai_msg = {
