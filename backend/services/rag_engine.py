@@ -23,10 +23,10 @@ class RAGEngine:
         if not api_key:
             raise RuntimeError("GROQ_API_KEY or GITHUB_TOKEN_FINE is not set")
             
-        base_url = os.getenv("GROQ_BASE_URL") # Allow custom endpoints if specified
+        base_url = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
         
         self.client = OpenAI(
-            base_url=base_url if base_url else None,
+            base_url=base_url,
             api_key=api_key,
         )
 
@@ -162,7 +162,7 @@ CONTEXT:
 """
 
         response = self.client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="groq/compound-mini",
             messages=[
                 {"role": "system", "content": system_content},
                 {"role": "user", "content": prompt},
@@ -224,7 +224,7 @@ INSTRUCTIONS:
 """
 
         response = self.client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="groq/compound-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful nutrition assistant."},
                 {"role": "user", "content": prompt},
@@ -250,7 +250,7 @@ INSTRUCTIONS:
 
         try:
             response = self.client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="groq/compound-mini",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Keep it brief."},
                     {"role": "user", "content": prompt},
