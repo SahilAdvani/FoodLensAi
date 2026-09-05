@@ -3,7 +3,7 @@
 FoodLens AI is an intelligent nutrition assistant that combines **OCR (Optical Character Recognition)**, **RAG (Retrieval-Augmented Generation)**, and **Interactive Chat** to help users understand food ingredients, allergies, and safety.
 
 # Live link
-👉 https://foodlensai-henna.vercel.app
+👉 https://foodlens-ai-henna.vercel.app
 
 ## 🚀 Features
 
