@@ -1,69 +1,94 @@
 import os
 import io
 import pytesseract
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image
+
+try:
+    import cv2
+    import numpy as np
+    HAS_OPENCV = True
+except ImportError:
+    HAS_OPENCV = False
 
 # Set Tesseract Valid Path
 TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 if os.path.exists(TESSERACT_PATH):
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
-def preprocess_image_for_ocr(image: Image.Image) -> Image.Image:
+def preprocess_image_bytes(image_bytes: bytes) -> list:
     """
-    Enhance low-contrast, shadowy, or slightly blurry mobile camera photos.
+    Advanced Multi-Variant Image Preprocessing pipeline for phone camera photos.
+    Uses OpenCV CLAHE (Adaptive Local Contrast Equalization) + Sharpening kernel
+    to eliminate shadows, glare, and lens blur on camera photos.
     """
-    # 1. Resize if image is too large (up to 1800px max)
-    if image.width > 1800 or image.height > 1800:
-        image.thumbnail((1800, 1800), Image.Resampling.LANCZOS)
-    
-    # 2. Convert to Grayscale
-    gray = image.convert("L")
+    variants = []
 
-    # 3. Boost Contrast & Sharpening to eliminate shadows and un-blur edges
-    contrast_enhancer = ImageEnhance.Contrast(gray)
-    enhanced = contrast_enhancer.enhance(1.8)
+    if HAS_OPENCV:
+        try:
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if img is not None:
+                h, w = img.shape[:2]
+                if max(h, w) > 1800:
+                    scale = 1800 / max(h, w)
+                    img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
 
-    sharpness_enhancer = ImageEnhance.Sharpness(enhanced)
-    sharpened = sharpness_enhancer.enhance(2.0)
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # 4. Optional subtle sharpen filter
-    final_img = sharpened.filter(ImageFilter.SHARPEN)
-    
-    return final_img
+                # 1. CLAHE (Local shadow & glare removal)
+                clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+                clahe_img = clahe.apply(gray)
+
+                # 2. Sharpening filter for un-blurring mobile camera text
+                kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+                sharpened = cv2.filter2D(clahe_img, -1, kernel)
+
+                # Convert to PIL Image
+                variants.append(Image.fromarray(sharpened))
+                variants.append(Image.fromarray(gray))
+        except Exception as e:
+            print(f"[OCR] OpenCV preprocessing fallback warning: {e}")
+
+    # Fallback to PIL standard grayscale if variants list is empty
+    if not variants:
+        try:
+            pil_img = Image.open(io.BytesIO(image_bytes))
+            if pil_img.width > 1800 or pil_img.height > 1800:
+                pil_img.thumbnail((1800, 1800), Image.Resampling.LANCZOS)
+            variants.append(pil_img.convert("L"))
+        except Exception:
+            pass
+
+    return variants
 
 def extract_text_from_image(image_bytes: bytes) -> str:
     """
     Multi-pass OCR extraction pipeline:
-    Applies image preprocessing + multi-PSM mode OCR passes to reliably capture 
-    text even on blurry, angled, or table-cluttered mobile camera photos.
+    Runs OCR across enhanced image variants and multiple PSM modes to reliably capture 
+    text even on blurry, shadowy, or angled mobile camera photos.
     """
     try:
-        raw_image = Image.open(io.BytesIO(image_bytes))
-        enhanced_image = preprocess_image_for_ocr(raw_image)
+        variants = preprocess_image_bytes(image_bytes)
+        if not variants:
+            return ""
 
-        # Multi-pass OCR: Try standard block (PSM 6) and multi-column layout (PSM 4)
-        psm_modes = ["--psm 6 --oem 3", "--psm 4 --oem 3"]
+        psm_modes = ["--psm 6 --oem 3", "--psm 4 --oem 3", "--psm 11 --oem 3"]
         extracted_chunks = []
 
-        for psm in psm_modes:
-            try:
-                txt = pytesseract.image_to_string(enhanced_image, lang="eng", config=psm)
-                if txt and len(txt.strip()) > 10:
-                    extracted_chunks.append(txt)
-            except Exception:
-                continue
+        for img_var in variants:
+            for psm in psm_modes:
+                try:
+                    txt = pytesseract.image_to_string(img_var, lang="eng", config=psm)
+                    if txt and len(txt.strip()) > 15:
+                        extracted_chunks.append(txt)
+                except Exception:
+                    continue
 
-        # If contrast-enhanced OCR yielded minimal text, retry on raw grayscale image
         if not extracted_chunks:
-            gray_raw = raw_image.convert("L")
-            txt = pytesseract.image_to_string(gray_raw, lang="eng", config="--psm 6 --oem 3")
-            if txt:
-                extracted_chunks.append(txt)
+            return ""
 
-        # Combine text from all passes
+        # Combine text from all passes and remove extra whitespace
         combined_text = "\n".join(extracted_chunks)
-        
-        # Clean formatting
         clean_text = combined_text.replace("\r", " ").replace("\n", " ")
         clean_text = " ".join(clean_text.split())
 
