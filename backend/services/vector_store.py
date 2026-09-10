@@ -30,7 +30,7 @@ class VectorStore:
             for doc in self.documents:
                 # Compute similarity between query and document ingredient name
                 score = get_similarity(q, doc["ingredient"])
-                if score >= 0.35: # Keep reasonable matches
+                if score >= 0.65: # Strict threshold to prevent false matches (e.g., Banana -> Caffeine)
                     query_results.append({
                         "ingredient": doc["ingredient"],
                         "role": doc["role"],

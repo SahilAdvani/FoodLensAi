@@ -74,20 +74,17 @@ class FoodAnalysisPipeline:
             scored_ingredients = []
 
         if not scored_ingredients:
-            return {
-                "success": True,
-                "ingredients": [],
-                "message": "No ingredients matched knowledge base with confidence"
-            }
+            # Fallback: Use cleaned extracted ingredients directly if knowledge base has no exact match (e.g. Banana, Chilli Powder)
+            selected_ingredients = cleaned[:MAX_INGREDIENTS]
+        else:
+            # Step 5: Sort by confidence (DESC)
+            scored_ingredients.sort(key=lambda x: x["score"], reverse=True)
 
-        # Step 5: Sort by confidence (DESC)
-        scored_ingredients.sort(key=lambda x: x["score"], reverse=True)
-
-        # Step 6: Pick top N MOST CONFIDENT
-        selected_ingredients = [
-            item["ingredient"]
-            for item in scored_ingredients[:MAX_INGREDIENTS]
-        ]
+            # Step 6: Pick top N MOST CONFIDENT
+            selected_ingredients = [
+                item["ingredient"]
+                for item in scored_ingredients[:MAX_INGREDIENTS]
+            ]
 
         # Step 7: Batched RAG explanation (SINGLE call)
         try:

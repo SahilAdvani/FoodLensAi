@@ -10,6 +10,17 @@ COMMON_FOOD_WORDS = [
     "corn", "soy", "nut", "fruit", "juice", "extract", "ghee", "masala"
 ]
 
+NUTRITION_CLUTTER_TERMS = {
+    "energy", "kcal", "protein", "carbohydrate", "carbohydrates", "total sugars", "added sugars",
+    "fat", "saturated fat", "trans fat", "sodium", "cholesterol", "dietary fiber", "fibre",
+    "daily value", "rda", "per 100g", "per serving", "product of", "ready-to-eat", "savouries",
+    "proprietary food", "indian snacks", "as seasoning agent", "servings per", "license no", "fssai"
+}
+
+def is_nutrition_clutter(item: str) -> bool:
+    item_lower = item.lower().strip()
+    return any(clutter in item_lower for clutter in NUTRITION_CLUTTER_TERMS)
+
 def looks_like_ingredients(text: str) -> bool:
     text = text.lower()
     return any(word in text for word in COMMON_FOOD_WORDS)
@@ -98,9 +109,9 @@ Example Output format:
         if isinstance(parsed, list) and len(parsed) > 0:
             cleaned_ai = []
             for item in parsed:
-                if isinstance(item, str):
+                if isinstance(item, str) and not is_nutrition_clutter(item):
                     c = clean_item(item)
-                    if len(c) > 2 and len(c) < 40:
+                    if len(c) > 2 and len(c) < 40 and not is_nutrition_clutter(c):
                         cleaned_ai.append(normalize_ingredient(c))
             
             cleaned_ai = list(dict.fromkeys(cleaned_ai))
