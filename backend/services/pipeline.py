@@ -93,9 +93,12 @@ class FoodAnalysisPipeline:
         try:
             analysis = self.rag.explain_ingredients_batch(selected_ingredients, language=language, user_prompt=user_prompt)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"Error in explain_ingredients_batch: {e}")
             return {
                 "success": False,
-                "error": "Analysis failed or timed out",
+                "error": f"Analysis failed: {str(e)}",
                 "ingredients": selected_ingredients
             }
 
