@@ -275,7 +275,7 @@ export function useLiveMode() {
                 await img.decode();
 
                 const canvas = document.createElement('canvas');
-                const scale = Math.min(1, 1000 / img.width);
+                const scale = Math.min(1, 1600 / img.width);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
                 canvas.getContext('2d').drawImage(
@@ -287,7 +287,7 @@ export function useLiveMode() {
                 );
 
                 const blob = await new Promise(r =>
-                    canvas.toBlob(r, 'image/jpeg', 0.8)
+                    canvas.toBlob(r, 'image/jpeg', 0.9)
                 );
 
                 const res = await analyzeImage(
