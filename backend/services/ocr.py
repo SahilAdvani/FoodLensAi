@@ -63,31 +63,41 @@ def preprocess_image_bytes(image_bytes: bytes) -> list:
 
 def extract_text_from_image(image_bytes: bytes) -> str:
     """
-    Multi-pass OCR extraction pipeline:
-    Runs OCR across enhanced image variants and multiple PSM modes to reliably capture 
-    text even on blurry, shadowy, or angled mobile camera photos.
+    Fast, reliable single/double-pass OCR extraction pipeline.
     """
     try:
         variants = preprocess_image_bytes(image_bytes)
         if not variants:
             return ""
 
-        psm_modes = ["--psm 6 --oem 3", "--psm 4 --oem 3", "--psm 11 --oem 3"]
+        # Use fast single pass with fallback mode
+        psm_modes = ["--psm 6 --oem 3", "--psm 3 --oem 3"]
         extracted_chunks = []
 
-        for img_var in variants:
-            for psm in psm_modes:
-                try:
-                    txt = pytesseract.image_to_string(img_var, lang="eng", config=psm)
-                    if txt and len(txt.strip()) > 15:
-                        extracted_chunks.append(txt)
-                except Exception:
-                    continue
+        # Only use the best preprocessed variant (CLAHE/sharpened)
+        target_img = variants[0]
+
+        for psm in psm_modes:
+            try:
+                txt = pytesseract.image_to_string(target_img, lang="eng", config=psm)
+                if txt and len(txt.strip()) > 15:
+                    extracted_chunks.append(txt)
+                    break  # Stop as soon as high-quality text is extracted!
+            except Exception:
+                continue
+
+        if not extracted_chunks and len(variants) > 1:
+            # Fallback to 2nd variant if 1st variant returned nothing
+            try:
+                txt = pytesseract.image_to_string(variants[1], lang="eng", config="--psm 6 --oem 3")
+                if txt and len(txt.strip()) > 10:
+                    extracted_chunks.append(txt)
+            except Exception:
+                pass
 
         if not extracted_chunks:
             return ""
 
-        # Combine text from all passes and remove extra whitespace
         combined_text = "\n".join(extracted_chunks)
         clean_text = combined_text.replace("\r", " ").replace("\n", " ")
         clean_text = " ".join(clean_text.split())
@@ -95,4 +105,5 @@ def extract_text_from_image(image_bytes: bytes) -> str:
         return clean_text
 
     except Exception as e:
-        raise RuntimeError(f"OCR failed: {str(e)}")
+        print(f"[OCR] Error during extraction: {e}")
+        return ""
