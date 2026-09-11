@@ -4,7 +4,7 @@ const API_URL = import.meta.env.DEV
 
 /* ---------------- core helpers ---------------- */
 
-const DEFAULT_TIMEOUT = 30000;
+const DEFAULT_TIMEOUT = 90000;
 
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_TIMEOUT) {
     const controller = new AbortController();
@@ -98,7 +98,7 @@ export const analyzeImage = async (
     const res = await fetchWithTimeout(`${API_URL}/analyze`, {
         method: 'POST',
         body: form,
-    }, 60000);
+    }, 120000);
 
     if (!res.ok) {
         let err = {};
