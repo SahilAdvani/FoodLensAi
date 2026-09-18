@@ -57,12 +57,14 @@ async def analyze_image(
 
     try:
         # 2. Analyze
+        print(f"\n[ROUTER /analyze] Request received for session_id='{session_id}', user_id='{user_id}', language='{language}'")
         loop = asyncio.get_running_loop()
         func = functools.partial(get_pipeline().analyze_image, image_bytes, language=language, user_prompt=user_prompt)
         result = await loop.run_in_executor(None, func)
 
         if not result.get("success"):
             err_msg = result.get("error", "Failed to detect text in image")
+            print(f"[ROUTER /analyze WARNING] Pipeline returned un-successful: {err_msg}")
             if "hi" in language.lower():
                 err_msg = "चित्र में कोई टेक्स्ट नहीं मिला। कृपया सामग्री (Ingredients) सूची की एक साफ़ फोटो अपलोड करें।"
             else:
@@ -88,6 +90,7 @@ async def analyze_image(
                 result["speech"] = re.sub(r'#|\*|`|⚠️|✅|🟢|🟡|🔴', '', raw_analysis)[:300]
         else:
             msg = result.get("message", "Analysis complete but no ingredients identified.")
+            print(f"[ROUTER /analyze INFO] Pipeline returned empty raw_analysis. Message: {msg}")
             if "better quality image" in msg:
                 if "hi" in language.lower():
                     msg = "कृपया थोड़ी बेहतर गुणवत्ता वाली इमेज के साथ पुनः प्रयास करें।"
@@ -108,9 +111,14 @@ async def analyze_image(
         if user_id:
             assistant_message["user_id"] = user_id
 
-        supabase.table("messages").insert(assistant_message).execute()
+        try:
+            supabase.table("messages").insert(assistant_message).execute()
+            print("[ROUTER /analyze] Successfully saved assistant message to Supabase DB.")
+        except Exception as db_err:
+            print(f"[ROUTER /analyze DB ERROR] Failed saving message to Supabase: {db_err}")
 
         result["analysis"] = raw_analysis or formatted_content
+        print("[ROUTER /analyze] Returning success response to client.\n")
 
         return {
             "success": True,
@@ -120,5 +128,5 @@ async def analyze_image(
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print(f"Error during analysis or result saving: {e}")
+        print(f"[ROUTER /analyze CRITICAL EXCEPTION]: {e}")
         raise HTTPException(status_code=500, detail=str(e))
