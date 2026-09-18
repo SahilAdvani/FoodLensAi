@@ -37,23 +37,25 @@ def extract_ingredients_regex(text: str) -> list[str]:
     """
     text_lower = text.lower()
 
-    # Try matching "ingredients" keyword
-    match = re.search(r"ingredients[:\-]?(.*)", text_lower)
+    # Try matching "ingredients" or "contains" keyword
+    match = re.search(r"(?:ingredients|contains|made with)[:\-]?(.*)", text_lower)
     if match:
         ingredients_text = match.group(1)
     else:
+        # If no explicit header, use full text if it contains food words
         if not looks_like_ingredients(text_lower):
             return []
         ingredients_text = text_lower
 
-    # Split by commas or semicolons
-    raw_items = re.split(r",|;", ingredients_text)
+    # Split by commas, semicolons, or newlines
+    raw_items = re.split(r"[,;\n\.]", ingredients_text)
 
     cleaned = []
     for item in raw_items:
-        item = clean_item(item)
-        if len(item) > 2 and len(item) < 40:
-            cleaned.append(item)
+        c = clean_item(item)
+        if len(c) > 2 and len(c) < 40 and not is_nutrition_clutter(c):
+            if looks_like_ingredients(c.lower()):
+                cleaned.append(c)
 
     cleaned = [normalize_ingredient(i) for i in cleaned]
     return list(dict.fromkeys(cleaned))

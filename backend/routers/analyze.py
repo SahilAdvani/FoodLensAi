@@ -61,6 +61,19 @@ async def analyze_image(
         func = functools.partial(get_pipeline().analyze_image, image_bytes, language=language, user_prompt=user_prompt)
         result = await loop.run_in_executor(None, func)
 
+        if not result.get("success"):
+            err_msg = result.get("error", "Failed to detect text in image")
+            if "hi" in language.lower():
+                err_msg = "चित्र में कोई टेक्स्ट नहीं मिला। कृपया सामग्री (Ingredients) सूची की एक साफ़ फोटो अपलोड करें।"
+            else:
+                err_msg = "No readable text detected. Please upload a clear photo of the ingredients list."
+            result["analysis"] = err_msg
+            result["speech"] = err_msg
+            return {
+                "success": True,
+                "data": result
+            }
+
         # Format the content into Markdown before saving   
         raw_analysis = result.get("analysis", "")
         formatted_content = raw_analysis

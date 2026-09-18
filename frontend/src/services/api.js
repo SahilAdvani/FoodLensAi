@@ -155,8 +155,11 @@ export const textToSpeech = async (
     text,
     voiceId = 'RABOvaPec1ymXz02oDQi'
 ) =>
-    fetchBlob(`${API_URL}/tts`, {
+    fetchWithTimeout(`${API_URL}/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voice_id: voiceId }),
+    }, 10000).then(res => {
+        if (!res.ok) throw new Error('TTS response not ok');
+        return res.blob();
     });
