@@ -63,47 +63,60 @@ def preprocess_image_bytes(image_bytes: bytes) -> list:
 
 def extract_text_from_image(image_bytes: bytes) -> str:
     """
-    Fast, reliable single/double-pass OCR extraction pipeline.
+    Fast, reliable single/double-pass OCR extraction pipeline with full diagnostic logging.
     """
     try:
+        print(f"[OCR LOG] Starting OCR text extraction for image payload ({len(image_bytes)} bytes)...")
         variants = preprocess_image_bytes(image_bytes)
         if not variants:
+            print("[OCR ERROR] Preprocessing returned 0 image variants (Image decode or PIL opening failed)!")
             return ""
 
-        # Use fast single pass with fallback mode
+        print(f"[OCR LOG] Preprocessed {len(variants)} image variant(s). Target image size: {variants[0].size}")
+
         psm_modes = ["--psm 6 --oem 3", "--psm 3 --oem 3"]
         extracted_chunks = []
-
-        # Only use the best preprocessed variant (CLAHE/sharpened)
         target_img = variants[0]
 
         for psm in psm_modes:
             try:
+                print(f"[OCR LOG] Attempting Tesseract pass with config: '{psm}'...")
                 txt = pytesseract.image_to_string(target_img, lang="eng", config=psm)
                 if txt and len(txt.strip()) > 15:
+                    print(f"[OCR LOG SUCCESS] Extracted {len(txt.strip())} chars with config '{psm}'.")
                     extracted_chunks.append(txt)
-                    break  # Stop as soon as high-quality text is extracted!
-            except Exception:
+                    break
+                else:
+                    print(f"[OCR LOG WARNING] Config '{psm}' returned empty or short text ({len(txt.strip()) if txt else 0} chars).")
+            except Exception as tess_err:
+                print(f"[OCR LOG EXCEPTION] Tesseract call failed for config '{psm}': {tess_err}")
                 continue
 
         if not extracted_chunks and len(variants) > 1:
-            # Fallback to 2nd variant if 1st variant returned nothing
             try:
+                print("[OCR LOG] Falling back to 2nd image variant with default config '--psm 6 --oem 3'...")
                 txt = pytesseract.image_to_string(variants[1], lang="eng", config="--psm 6 --oem 3")
                 if txt and len(txt.strip()) > 10:
+                    print(f"[OCR LOG SUCCESS] Fallback variant extracted {len(txt.strip())} chars.")
                     extracted_chunks.append(txt)
-            except Exception:
-                pass
+                else:
+                    print(f"[OCR LOG WARNING] Fallback variant also returned insufficient text ({len(txt.strip()) if txt else 0} chars).")
+            except Exception as tess_err2:
+                print(f"[OCR LOG EXCEPTION] Fallback variant call failed: {tess_err2}")
 
         if not extracted_chunks:
+            print("[OCR LOG RESULT] Total extracted text from all passes: 0 characters.")
             return ""
 
         combined_text = "\n".join(extracted_chunks)
         clean_text = combined_text.replace("\r", " ").replace("\n", " ")
         clean_text = " ".join(clean_text.split())
+        print(f"[OCR LOG RESULT] Final cleaned text ({len(clean_text)} chars): '{clean_text[:150]}...'")
 
         return clean_text
 
     except Exception as e:
-        print(f"[OCR] Error during extraction: {e}")
+        import traceback
+        traceback.print_exc()
+        print(f"[OCR CRITICAL EXCEPTION] Unexpected error during extract_text_from_image: {e}")
         return ""

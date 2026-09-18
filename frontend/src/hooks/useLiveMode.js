@@ -299,9 +299,15 @@ export function useLiveMode() {
 
                 setResult({ description: res?.data?.analysis });
                 setStep(STEPS.RESULT);
-                speak(res?.data?.speech || res?.data?.analysis);
+
+                // Speak result asynchronously without blocking or triggering catch block
+                try {
+                    speak(res?.data?.speech || res?.data?.analysis);
+                } catch (speechErr) {
+                    console.warn("Speech playback encountered an error:", speechErr);
+                }
             } catch (e) {
-                console.error(e);
+                console.error("Analysis pipeline error:", e);
                 speak(
                     currentLanguage === 'hi-IN'
                         ? 'फोटो साफ़ नहीं दिख रही। कृपया दूसरी अच्छी फोटो डालें।'
