@@ -162,7 +162,7 @@ CONTEXT:
 """
 
         response = self.client.chat.completions.create(
-            model="groq/compound-mini",
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "system", "content": system_content},
                 {"role": "user", "content": prompt},
@@ -224,7 +224,7 @@ INSTRUCTIONS:
 """
 
         response = self.client.chat.completions.create(
-            model="groq/compound-mini",
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "system", "content": "You are a helpful nutrition assistant."},
                 {"role": "user", "content": prompt},
@@ -250,7 +250,7 @@ INSTRUCTIONS:
 
         try:
             response = self.client.chat.completions.create(
-                model="groq/compound-mini",
+                model="openai/gpt-oss-120b",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Keep it brief."},
                     {"role": "user", "content": prompt},

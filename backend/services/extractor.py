@@ -91,7 +91,7 @@ Example Output format:
 ["Refined Wheat Flour", "Sugar", "Palm Oil", "Salt"]
 """
         response = rag_engine.client.chat.completions.create(
-            model="groq/compound-mini",
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "system", "content": "You are a precise JSON food ingredient parser. Return ONLY a JSON array of string names."},
                 {"role": "user", "content": prompt}
