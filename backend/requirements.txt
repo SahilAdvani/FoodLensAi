@@ -9,3 +9,4 @@ openai
 elevenlabs
 edge-tts
 opencv-python-headless
+httpx

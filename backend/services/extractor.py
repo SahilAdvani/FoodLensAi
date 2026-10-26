@@ -97,17 +97,21 @@ Example Output format:
                 {"role": "user", "content": prompt}
             ],
             temperature=0.1,
-            max_tokens=250,
-            timeout=10
+            max_tokens=800,
+            timeout=15
         )
 
         content = response.choices[0].message.content.strip()
 
-        # Clean JSON fences if present
-        if content.startswith("```"):
-            content = re.sub(r"^```(?:json)?|```$", "", content, flags=re.MULTILINE).strip()
+        # Clean JSON fences or extract bracketed array
+        match = re.search(r"\[.*\]", content, re.DOTALL)
+        if match:
+            parsed = json.loads(match.group(0))
+        else:
+            if content.startswith("```"):
+                content = re.sub(r"^```(?:json)?|```$", "", content, flags=re.MULTILINE).strip()
+            parsed = json.loads(content)
 
-        parsed = json.loads(content)
         if isinstance(parsed, list) and len(parsed) > 0:
             cleaned_ai = []
             for item in parsed:
@@ -121,7 +125,7 @@ Example Output format:
                 return cleaned_ai
 
     except Exception as e:
-        print(f"[EXTRACTOR] AI extraction fallback to regex due to: {e}")
+        print(f"[EXTRACTOR] AI extraction fallback due to: {e}. Raw content: {repr(locals().get('content', ''))}")
 
     # 2. Fallback to Regex Extractor if AI is unavailable or returns empty
     return extract_ingredients_regex(text)

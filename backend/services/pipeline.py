@@ -26,7 +26,7 @@ class FoodAnalysisPipeline:
         print(f"[PIPELINE STEP 1/5] Received image ({len(image_bytes)} bytes), language='{language}', prompt='{user_prompt}'")
 
         # Step 1: OCR
-        print("[PIPELINE STEP 1/5] Executing Tesseract OCR on image variants...")
+        print("[PIPELINE STEP 1/5] Extracting text from image (Cloud-first Vision OCR)...")
         raw_text = extract_text_from_image(image_bytes)
 
         if not raw_text or not raw_text.strip():
