@@ -107,7 +107,14 @@ def extract_text_with_cloud_ocr(image_bytes: bytes) -> str:
     Runs via lightweight HTTPS REST call (0 MB server RAM, 25k free req/month).
     """
     try:
-        api_key = os.getenv("OCR_SPACE_API_KEY", "helloworld")
+        api_key = os.getenv("OCR_SPACE_API_KEY")
+        if api_key and api_key.strip():
+            api_key = api_key.strip()
+            print(f"[OCR] Cloud OCR.space using configured API key ({api_key[:4]}****)")
+        else:
+            api_key = "helloworld"
+            print("[OCR WARNING] OCR_SPACE_API_KEY not found in environment. Using throttled 'helloworld' default.")
+
         files = {
             "file": ("image.jpg", image_bytes, "image/jpeg")
         }
@@ -134,6 +141,9 @@ def extract_text_with_cloud_ocr(image_bytes: bytes) -> str:
                                 return text
                 else:
                     print(f"[OCR] Cloud OCR.space HTTP {response.status_code}: {response.text[:200]}")
+                    # If throttled or unauthorized, retrying the second engine with the same key will also fail
+                    if response.status_code in (401, 403, 503):
+                        break
     except Exception as e:
         print(f"[OCR] Cloud OCR.space failed: {e}")
         
@@ -183,6 +193,8 @@ def extract_text_from_image(image_bytes: bytes) -> str:
             print(f"[OCR SAMPLE]: '{clean_text[:150]}...'")
             return clean_text
         print("[OCR LOG WARNING] Tier 1 Gemini returned empty or failed. Falling back to Tier 2...")
+    else:
+        print("[OCR LOG WARNING] Tier 1 Gemini skipped: GEMINI_API_KEY is not set in environment.")
 
     # 2. Tier 2: Cloud OCR (OCR.space)
     print("[OCR LOG] Attempting Tier 2: Free Cloud OCR API (OCR.space)...")
